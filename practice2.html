@@ -1,0 +1,736 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bass Finger Independence Exercise</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        label {
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        input[type="range"] {
+            width: 150px;
+        }
+        
+        button {
+            background: #00d4ff;
+            color: #1a1a2e;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00b8e6;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+        
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .finger-legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .finger-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .finger-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .current-pattern {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .pattern-display {
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            margin: 10px 0;
+        }
+        
+        .pattern-number {
+            color: #aaa;
+            font-size: 14px;
+        }
+        
+        .fretboard {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 30px;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .string {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .string-label {
+            width: 40px;
+            font-weight: bold;
+            color: #00d4ff;
+            font-size: 18px;
+        }
+        
+        .string-line {
+            flex: 1;
+            height: 3px;
+            background: linear-gradient(90deg, #666 0%, #888 50%, #666 100%);
+            position: relative;
+            margin: 0 10px;
+            border-radius: 2px;
+        }
+        
+        .fret {
+            position: absolute;
+            width: 50px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .fret-marker {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #666;
+            transition: all 0.15s;
+            position: relative;
+        }
+        
+        .fret.active .fret-marker {
+            transform: scale(1.5);
+            box-shadow: 0 0 30px currentColor;
+            color: #000 !important;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .fret.in-pattern .fret-marker {
+            color: #fff;
+            font-weight: bold;
+        }
+        
+        .exercise-info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #00d4ff;
+            min-height: 30px;
+        }
+        
+        .tempo-display, .start-fret-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff88;
+        }
+        
+        .progress-container {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            transition: width 0.3s;
+            border-radius: 5px;
+        }
+        
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #aaa;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .nav-btn {
+            padding: 8px 20px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎸 Bass Finger Independence Exercise</h1>
+        <p class="subtitle">All 24 permutations of 4-finger patterns across all strings</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Tempo: <span class="tempo-display" id="tempoDisplay">70</span> BPM</label>
+                <input type="range" id="tempoSlider" min="40" max="180" value="70" step="5">
+            </div>
+
+            <div class="control-group">
+                <label>Start Fret: <span class="start-fret-display" id="startFretDisplay">5</span></label>
+                <input type="range" id="startFretSlider" min="1" max="12" value="5" step="1">
+            </div>
+
+            <div class="control-group">
+                <label>Volume: <span id="volumeDisplay">70</span>%</label>
+                <input type="range" id="volumeSlider" min="0" max="100" value="70" step="5">
+            </div>
+            
+            <button id="playBtn">▶ Play</button>
+            <button id="stopBtn" disabled>⏹ Stop</button>
+        </div>
+        
+        <div class="finger-legend">
+            <div class="finger-item">
+                <div class="finger-color" style="background: #ff6b6b;">1</div>
+                <span>Index</span>
+            </div>
+            <div class="finger-item">
+                <div class="finger-color" style="background: #ffd93d;">2</div>
+                <span>Middle</span>
+            </div>
+            <div class="finger-item">
+                <div class="finger-color" style="background: #6bcb77;">3</div>
+                <span>Ring</span>
+            </div>
+            <div class="finger-item">
+                <div class="finger-color" style="background: #9b59b6;">4</div>
+                <span>Pinky</span>
+            </div>
+        </div>
+        
+        <div class="current-pattern">
+            <div class="pattern-number">Pattern <span id="patternNum">1</span> of 24</div>
+            <div class="pattern-display" id="patternDisplay">1-2-3-4</div>
+            <div id="patternDesc" style="color: #aaa; font-size: 14px;">Index → Middle → Ring → Pinky</div>
+        </div>
+        
+        <div class="fretboard" id="fretboard">
+            <div class="string">
+                <div class="string-label">G</div>
+                <div class="string-line" data-string="0"></div>
+            </div>
+            <div class="string">
+                <div class="string-label">D</div>
+                <div class="string-line" data-string="1"></div>
+            </div>
+            <div class="string">
+                <div class="string-label">A</div>
+                <div class="string-line" data-string="2"></div>
+            </div>
+            <div class="string">
+                <div class="string-label">E</div>
+                <div class="string-line" data-string="3"></div>
+            </div>
+        </div>
+        
+        <div class="exercise-info" id="exerciseInfo">
+            Press Play to start the exercise
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prevPattern">← Previous Pattern</button>
+            <button class="nav-btn" id="nextPattern">Next Pattern →</button>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <div class="progress-text" id="progressText">0% Complete</div>
+        </div>
+    </div>
+
+    <script>
+        // Finger colors
+        const fingerColors = {
+            1: '#ff6b6b', // Index - Red
+            2: '#ffd93d', // Middle - Yellow
+            3: '#6bcb77', // Ring - Green
+            4: '#9b59b6'  // Pinky - Purple
+        };
+        
+        const fingerNames = {
+            1: 'Index',
+            2: 'Middle',
+            3: 'Ring',
+            4: 'Pinky'
+        };
+        
+        // Generate all 24 permutations of [1,2,3,4]
+        function getPermutations(arr) {
+            if (arr.length <= 1) return [arr];
+            const result = [];
+            for (let i = 0; i < arr.length; i++) {
+                const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];
+                const perms = getPermutations(rest);
+                for (const perm of perms) {
+                    result.push([arr[i], ...perm]);
+                }
+            }
+            return result;
+        }
+        
+        const allPermutations = getPermutations([1, 2, 3, 4]);
+        
+        // Audio Context
+        let audioContext;
+        let masterGain;
+        
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioContext.createGain();
+                masterGain.connect(audioContext.destination);
+                masterGain.gain.value = 0.7;
+            }
+        }
+
+        const stringOpenFrequencies = {
+            0: 196.00, // G
+            1: 146.83, // D
+            2: 110.00, // A
+            3: 82.41   // E
+        };
+
+        function getFretFrequency(string, fret) {
+            const openFreq = stringOpenFrequencies[string];
+            return openFreq * Math.pow(2, fret / 12);
+        }
+
+        function playBassNote(string, fret, duration = 0.3) {
+            initAudio();
+            
+            const now = audioContext.currentTime;
+            const freq = getFretFrequency(string, fret);
+            
+            const osc1 = audioContext.createOscillator();
+            const osc2 = audioContext.createOscillator();
+            const osc3 = audioContext.createOscillator();
+            
+            osc1.type = 'sawtooth';
+            osc2.type = 'sine';
+            osc3.type = 'triangle';
+            
+            osc1.frequency.value = freq;
+            osc2.frequency.value = freq;
+            osc3.frequency.value = freq * 2;
+            
+            const gain1 = audioContext.createGain();
+            const gain2 = audioContext.createGain();
+            const gain3 = audioContext.createGain();
+            
+            gain1.gain.value = 0.3;
+            gain2.gain.value = 0.5;
+            gain3.gain.value = 0.15;
+            
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 800 + (fret * 30);
+            filter.Q.value = 1;
+            
+            const envelope = audioContext.createGain();
+            envelope.gain.value = 0;
+            envelope.gain.setValueAtTime(0, now);
+            envelope.gain.linearRampToValueAtTime(1, now + 0.01);
+            envelope.gain.exponentialRampToValueAtTime(0.6, now + 0.08);
+            envelope.gain.linearRampToValueAtTime(0.4, now + duration - 0.05);
+            envelope.gain.linearRampToValueAtTime(0, now + duration);
+            
+            osc1.connect(gain1);
+            osc2.connect(gain2);
+            osc3.connect(gain3);
+            
+            gain1.connect(filter);
+            gain2.connect(filter);
+            gain3.connect(filter);
+            
+            filter.connect(envelope);
+            envelope.connect(masterGain);
+            
+            osc1.start(now);
+            osc2.start(now);
+            osc3.start(now);
+            
+            osc1.stop(now + duration);
+            osc2.stop(now + duration);
+            osc3.stop(now + duration);
+        }
+
+        let currentPermutationIndex = 0;
+        let isPlaying = false;
+        let currentNoteIndex = 0;
+        let intervalId = null;
+        let tempo = 70;
+        let startFret = 5;
+        let totalNotesPlayed = 0;
+        let totalNotesInExercise = 0;
+        
+        const tempoSlider = document.getElementById('tempoSlider');
+        const tempoDisplay = document.getElementById('tempoDisplay');
+        const startFretSlider = document.getElementById('startFretSlider');
+        const startFretDisplay = document.getElementById('startFretDisplay');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeDisplay = document.getElementById('volumeDisplay');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const exerciseInfo = document.getElementById('exerciseInfo');
+        const patternDisplay = document.getElementById('patternDisplay');
+        const patternNum = document.getElementById('patternNum');
+        const patternDesc = document.getElementById('patternDesc');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const prevPatternBtn = document.getElementById('prevPattern');
+        const nextPatternBtn = document.getElementById('nextPattern');
+        
+        // Initialize fretboard
+        function initFretboard() {
+            const strings = document.querySelectorAll('.string-line');
+            strings.forEach((stringLine, stringIndex) => {
+                for (let fret = 0; fret <= 15; fret++) {
+                    const fretDiv = document.createElement('div');
+                    fretDiv.className = 'fret';
+                    fretDiv.style.left = `${fret * 50}px`;
+                    fretDiv.dataset.string = stringIndex;
+                    fretDiv.dataset.fret = fret;
+                    
+                    const marker = document.createElement('div');
+                    marker.className = 'fret-marker';
+                    marker.textContent = fret;
+                    
+                    fretDiv.appendChild(marker);
+                    stringLine.appendChild(fretDiv);
+                    
+                    fretDiv.addEventListener('click', () => {
+                        playBassNote(stringIndex, fret, 0.4);
+                        highlightSingleNote(stringIndex, fret);
+                    });
+                }
+            });
+        }
+        
+        function highlightSingleNote(string, fret) {
+            document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
+            const fretEl = document.querySelector(
+                `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
+            );
+            if (fretEl) {
+                fretEl.classList.add('active');
+            }
+        }
+        
+        function updatePatternDisplay() {
+            const perm = allPermutations[currentPermutationIndex];
+            
+            // Create colored pattern display
+            let coloredPattern = '';
+            perm.forEach((finger, i) => {
+                coloredPattern += `<span style="color: ${fingerColors[finger]}">${finger}</span>`;
+                if (i < 3) coloredPattern += '<span style="color: #555">-</span>';
+            });
+            patternDisplay.innerHTML = coloredPattern;
+            
+            patternNum.textContent = currentPermutationIndex + 1;
+            patternDesc.textContent = perm.map(f => fingerNames[f]).join(' → ');
+            
+            highlightCurrentPattern();
+        }
+        
+        function highlightCurrentPattern() {
+            const perm = allPermutations[currentPermutationIndex];
+            
+            // Clear all highlights
+            document.querySelectorAll('.fret').forEach(fret => {
+                fret.classList.remove('in-pattern', 'active');
+                const marker = fret.querySelector('.fret-marker');
+                marker.style.background = 'rgba(255, 255, 255, 0.08)';
+                marker.style.borderColor = '#444';
+                marker.style.color = '#666';
+            });
+            
+            // Highlight pattern across all strings
+            for (let string = 0; string < 4; string++) {
+                perm.forEach((finger, i) => {
+                    const fret = startFret + (finger - 1);
+                    const fretEl = document.querySelector(
+                        `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
+                    );
+                    if (fretEl) {
+                        fretEl.classList.add('in-pattern');
+                        const marker = fretEl.querySelector('.fret-marker');
+                        marker.style.background = fingerColors[finger];
+                        marker.style.borderColor = fingerColors[finger];
+                        marker.style.color = '#fff';
+                    }
+                });
+            }
+        }
+        
+        function buildFullExercise() {
+            // Build exercise: all 4 strings for current permutation
+            const perm = allPermutations[currentPermutationIndex];
+            const notes = [];
+            
+            // Go through all 4 strings (G, D, A, E = 0, 1, 2, 3)
+            for (let string = 0; string < 4; string++) {
+                perm.forEach((finger, i) => {
+                    const fret = startFret + (finger - 1);
+                    notes.push({ string, fret, finger });
+                });
+            }
+            
+            return notes;
+        }
+        
+        function updateProgress() {
+            const totalPatterns = 24;
+            const notesPerPattern = 16; // 4 fingers x 4 strings
+            totalNotesInExercise = totalPatterns * notesPerPattern;
+            
+            const currentPatternNotes = currentNoteIndex;
+            const completedPatternNotes = currentPermutationIndex * notesPerPattern;
+            const totalPlayed = completedPatternNotes + currentPatternNotes;
+            
+            const percent = Math.round((totalPlayed / totalNotesInExercise) * 100);
+            progressFill.style.width = `${percent}%`;
+            progressText.textContent = `${percent}% Complete (Pattern ${currentPermutationIndex + 1}/24)`;
+        }
+        
+        function playNoteWithHighlight(note, noteDuration) {
+            const { string, fret, finger } = note;
+            
+            document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
+            
+            const fretEl = document.querySelector(
+                `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
+            );
+            
+            if (fretEl) {
+                fretEl.classList.add('active');
+                const marker = fretEl.querySelector('.fret-marker');
+                marker.style.background = fingerColors[finger];
+                marker.style.borderColor = '#fff';
+            }
+            
+            playBassNote(string, fret, noteDuration);
+            
+            const stringNames = ['G', 'D', 'A', 'E'];
+            exerciseInfo.innerHTML = `String <strong>${stringNames[string]}</strong> | Fret <strong>${fret}</strong> | Finger <span style="color: ${fingerColors[finger]}; font-weight: bold;">${finger} (${fingerNames[finger]})</span>`;
+            
+            updateProgress();
+        }
+        
+        function startPlayback() {
+            initAudio();
+            isPlaying = true;
+            currentNoteIndex = 0;
+            playBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            const exercise = buildFullExercise();
+            const noteInterval = (60 / tempo) * 1000;
+            const noteDuration = noteInterval / 1000 * 0.85;
+            
+            intervalId = setInterval(() => {
+                if (currentNoteIndex >= exercise.length) {
+                    // Move to next permutation
+                    currentPermutationIndex++;
+                    currentNoteIndex = 0;
+                    
+                    if (currentPermutationIndex >= allPermutations.length) {
+                        // Exercise complete!
+                        currentPermutationIndex = 0;
+                        stopPlayback();
+                        exerciseInfo.innerHTML = '🎉 <strong>Exercise Complete!</strong> All 24 patterns finished!';
+                        progressFill.style.width = '100%';
+                        progressText.textContent = '100% Complete! 🎉';
+                        return;
+                    }
+                    
+                    updatePatternDisplay();
+                    exercise.length = 0;
+                    exercise.push(...buildFullExercise());
+                }
+                
+                playNoteWithHighlight(exercise[currentNoteIndex], noteDuration);
+                currentNoteIndex++;
+            }, noteInterval);
+        }
+        
+        function stopPlayback() {
+            isPlaying = false;
+            playBtn.disabled = false;
+            stopBtn.disabled = true;
+            clearInterval(intervalId);
+            document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
+            if (exerciseInfo.textContent.indexOf('Complete') === -1) {
+                exerciseInfo.textContent = 'Stopped';
+            }
+        }
+        
+        // Event listeners
+        tempoSlider.addEventListener('input', (e) => {
+            tempo = parseInt(e.target.value);
+            tempoDisplay.textContent = tempo;
+            
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+        });
+        
+        startFretSlider.addEventListener('input', (e) => {
+            startFret = parseInt(e.target.value);
+            startFretDisplay.textContent = startFret;
+            highlightCurrentPattern();
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = parseInt(e.target.value);
+            volumeDisplay.textContent = volume;
+            if (masterGain) {
+                masterGain.gain.value = volume / 100;
+            }
+        });
+        
+        playBtn.addEventListener('click', startPlayback);
+        stopBtn.addEventListener('click', stopPlayback);
+        
+        prevPatternBtn.addEventListener('click', () => {
+            if (currentPermutationIndex > 0) {
+                currentPermutationIndex--;
+                currentNoteIndex = 0;
+                updatePatternDisplay();
+                updateProgress();
+                
+                if (isPlaying) {
+                    stopPlayback();
+                    startPlayback();
+                }
+            }
+        });
+        
+        nextPatternBtn.addEventListener('click', () => {
+            if (currentPermutationIndex < allPermutations.length - 1) {
+                currentPermutationIndex++;
+                currentNoteIndex = 0;
+                updatePatternDisplay();
+                updateProgress();
+                
+                if (isPlaying) {
+                    stopPlayback();
+                    startPlayback();
+                }
+            }
+        });
+        
+        // Initialize
+        initFretboard();
+        updatePatternDisplay();
+        updateProgress();
+    </script>
+</body>
+</html>
