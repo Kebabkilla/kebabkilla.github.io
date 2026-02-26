@@ -343,19 +343,19 @@
         <div class="finger-legend">
             <div class="finger-item">
                 <div class="finger-color" style="background: #ff6b6b;">1</div>
-                <span>Index</span>
+                <span>Index (Fret +0)</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #ffd93d;">2</div>
-                <span>Middle</span>
+                <span>Middle (Fret +1)</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #6bcb77;">3</div>
-                <span>Ring</span>
+                <span>Ring (Fret +2)</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #9b59b6;">4</div>
-                <span>Pinky</span>
+                <span>Pinky (Fret +3)</span>
             </div>
         </div>
         
@@ -419,7 +419,7 @@
             4: 'Pinky'
         };
         
-        // Finger to fret offset mapping
+        // Finger to fret offset: finger 1 = +0, finger 2 = +1, finger 3 = +2, finger 4 = +3
         function fingerToFret(finger, startFret) {
             return startFret + (finger - 1);
         }
@@ -550,6 +550,15 @@
         const nextPatternBtn = document.getElementById('nextPattern');
         const fretNumbers = document.getElementById('fretNumbers');
         
+        // Note names for display
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        function getNoteName(string, fret) {
+            // Open string notes: G(0)=G, D(1)=D, A(2)=A, E(3)=E
+            const openNotes = { 0: 7, 1: 2, 2: 9, 3: 4 }; // G=7, D=2, A=9, E=4
+            const noteIndex = (openNotes[string] + fret) % 12;
+            return noteNames[noteIndex];
+        }
+        
         // Initialize fretboard
         function initFretboard() {
             // Add fret numbers
@@ -636,18 +645,15 @@
                 marker.textContent = '';
             });
             
-            // NOW: Display fingers in PLAY ORDER from left to right on fretboard
-            // perm = [1,3,2,4] means:
-            // - 1st position (startFret + 0): show "1" (play first, use index)
-            // - 2nd position (startFret + 1): show "3" (play second, use ring)
-            // - 3rd position (startFret + 2): show "2" (play third, use middle)
-            // - 4th position (startFret + 3): show "4" (play fourth, use pinky)
+            // Display fingers in PLAY ORDER from left to right on fretboard
+            // perm = [1,3,2,4] means play order: finger 1, then finger 3, then finger 2, then finger 4
+            // Position on fretboard is determined by finger number:
+            // Finger 1 always at startFret+0, Finger 2 at startFret+1, etc.
             
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, position) => {
-                    // position = 0,1,2,3 (left to right on fretboard)
-                    // finger = which finger number to show at this position
-                    const fret = startFret + position;
+                perm.forEach((finger, orderIndex) => {
+                    // finger determines which fret (finger 1 = startFret, finger 3 = startFret+2, etc.)
+                    const fret = fingerToFret(finger, startFret);
                     const fretEl = document.querySelector(
                         `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
                     );
@@ -658,7 +664,8 @@
                         marker.style.borderColor = fingerColors[finger];
                         marker.style.color = '#fff';
                         marker.style.boxShadow = `0 0 10px ${fingerColors[finger]}50`;
-                        marker.textContent = finger;
+                        // Show the ORDER (1st, 2nd, 3rd, 4th) instead of finger number
+                        marker.textContent = orderIndex + 1;
                     }
                 });
             }
@@ -668,14 +675,18 @@
             const perm = allPermutations[currentPermutationIndex];
             const notes = [];
             
-            // Play in order from left to right (position 0, 1, 2, 3)
-            // The finger at each position determines the sound
+            // Play in the ORDER of the permutation
+            // perm = [1,3,2,4] means:
+            // 1st: play finger 1 (fret = startFret + 0)
+            // 2nd: play finger 3 (fret = startFret + 2)
+            // 3rd: play finger 2 (fret = startFret + 1)
+            // 4th: play finger 4 (fret = startFret + 3)
+            
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, position) => {
-                    // position determines fret location (left to right)
-                    // finger determines which finger is used (and shown)
-                    const fret = startFret + position;
-                    notes.push({ string, fret, finger, position });
+                perm.forEach((finger, orderIndex) => {
+                    // The FINGER determines which FRET to play
+                    const fret = fingerToFret(finger, startFret);
+                    notes.push({ string, fret, finger, orderIndex });
                 });
             }
             
@@ -697,7 +708,7 @@
         }
         
         function playNoteWithHighlight(note, noteDuration) {
-            const { string, fret, finger, position } = note;
+            const { string, fret, finger, orderIndex } = note;
             
             document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
             
@@ -711,17 +722,21 @@
                 marker.style.borderColor = '#fff';
             }
             
+            // Play the correct fret based on which finger
             playBassNote(string, fret, noteDuration);
             
             const stringNames = ['G', 'D', 'A', 'E'];
             const ordinals = ['1st', '2nd', '3rd', '4th'];
+            const noteName = getNoteName(string, fret);
+            
             exerciseInfo.innerHTML = `
+                ${ordinals[orderIndex]} note: 
                 <span style="color: ${fingerColors[finger]}; font-weight: bold;">
                     Finger ${finger} (${fingerNames[finger]})
                 </span> | 
                 String <strong>${stringNames[string]}</strong> | 
                 Fret <strong>${fret}</strong> |
-                ${ordinals[position]} note
+                Note <strong>${noteName}</strong>
             `;
             
             updateProgress();
