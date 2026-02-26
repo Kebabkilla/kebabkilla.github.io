@@ -192,36 +192,23 @@
         }
         
         .fret-marker {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid transparent;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
+            font-size: 22px;
+            font-weight: bold;
             color: #555;
             transition: all 0.15s;
             position: relative;
         }
         
-        .fret-marker .order-number {
-            font-size: 18px;
-            font-weight: bold;
-            line-height: 1;
-        }
-        
-        .fret-marker .finger-label {
-            font-size: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            opacity: 0.8;
-        }
-        
         .fret.active .fret-marker {
-            transform: scale(1.4);
+            transform: scale(1.5);
             box-shadow: 0 0 35px currentColor, 0 0 15px currentColor inset;
             z-index: 10;
             border-color: #fff !important;
@@ -231,6 +218,7 @@
             color: #fff;
             font-weight: bold;
             border-width: 3px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
         
         .exercise-info {
@@ -289,14 +277,6 @@
         
         .nav-btn:hover {
             background: rgba(255,255,255,0.2);
-        }
-        
-        .fret-divider {
-            position: absolute;
-            width: 2px;
-            height: 100%;
-            background: linear-gradient(180deg, #555 0%, #333 100%);
-            top: 0;
         }
     </style>
 </head>
@@ -401,13 +381,6 @@
             2: 'Middle',
             3: 'Ring',
             4: 'Pinky'
-        };
-        
-        const fingerShortNames = {
-            1: 'IDX',
-            2: 'MID',
-            3: 'RNG',
-            4: 'PNK'
         };
         
         // Generate all 24 permutations of [1,2,3,4]
@@ -516,8 +489,6 @@
         let intervalId = null;
         let tempo = 70;
         let startFret = 5;
-        let totalNotesPlayed = 0;
-        let totalNotesInExercise = 0;
         
         const tempoSlider = document.getElementById('tempoSlider');
         const tempoDisplay = document.getElementById('tempoDisplay');
@@ -544,6 +515,7 @@
                 const numDiv = document.createElement('div');
                 numDiv.className = 'fret-num';
                 numDiv.textContent = fret;
+                numDiv.id = `fret-label-${fret}`;
                 fretNumbers.appendChild(numDiv);
             }
             
@@ -558,17 +530,8 @@
                     
                     const marker = document.createElement('div');
                     marker.className = 'fret-marker';
+                    marker.textContent = '';
                     
-                    const orderNum = document.createElement('span');
-                    orderNum.className = 'order-number';
-                    orderNum.textContent = '';
-                    
-                    const fingerLabel = document.createElement('span');
-                    fingerLabel.className = 'finger-label';
-                    fingerLabel.textContent = '';
-                    
-                    marker.appendChild(orderNum);
-                    marker.appendChild(fingerLabel);
                     fretDiv.appendChild(marker);
                     stringLine.appendChild(fretDiv);
                     
@@ -610,24 +573,22 @@
         function highlightCurrentPattern() {
             const perm = allPermutations[currentPermutationIndex];
             
-            // Clear all highlights
+            // Clear all fret markers
             document.querySelectorAll('.fret').forEach(fret => {
                 fret.classList.remove('in-pattern', 'active');
                 const marker = fret.querySelector('.fret-marker');
                 marker.style.background = 'rgba(255, 255, 255, 0.05)';
                 marker.style.borderColor = 'transparent';
                 marker.style.color = '#555';
-                
-                const orderNum = marker.querySelector('.order-number');
-                const fingerLabel = marker.querySelector('.finger-label');
-                orderNum.textContent = '';
-                fingerLabel.textContent = '';
+                marker.textContent = '';
             });
             
-            // Highlight pattern across all strings with order numbers
+            // Display finger numbers in order on the fretboard
+            // perm = [1,2,3,4] means: fret+0 gets finger 1, fret+1 gets finger 2, etc.
+            // perm = [2,1,3,4] means: fret+0 gets finger 2, fret+1 gets finger 1, etc.
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, orderIndex) => {
-                    const fret = startFret + (finger - 1);
+                perm.forEach((finger, position) => {
+                    const fret = startFret + position;
                     const fretEl = document.querySelector(
                         `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
                     );
@@ -638,14 +599,7 @@
                         marker.style.borderColor = fingerColors[finger];
                         marker.style.color = '#fff';
                         marker.style.boxShadow = `0 0 10px ${fingerColors[finger]}50`;
-                        
-                        // Show order number (1st, 2nd, 3rd, 4th)
-                        const orderNum = marker.querySelector('.order-number');
-                        orderNum.textContent = orderIndex + 1;
-                        
-                        // Show finger label
-                        const fingerLabel = marker.querySelector('.finger-label');
-                        fingerLabel.textContent = fingerShortNames[finger];
+                        marker.textContent = finger; // Show finger number
                     }
                 });
             }
@@ -657,9 +611,9 @@
             
             // Go through all 4 strings (G, D, A, E = 0, 1, 2, 3)
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, orderIndex) => {
-                    const fret = startFret + (finger - 1);
-                    notes.push({ string, fret, finger, order: orderIndex + 1 });
+                perm.forEach((finger, position) => {
+                    const fret = startFret + position;
+                    notes.push({ string, fret, finger, position });
                 });
             }
             
@@ -669,7 +623,7 @@
         function updateProgress() {
             const totalPatterns = 24;
             const notesPerPattern = 16;
-            totalNotesInExercise = totalPatterns * notesPerPattern;
+            const totalNotesInExercise = totalPatterns * notesPerPattern;
             
             const currentPatternNotes = currentNoteIndex;
             const completedPatternNotes = currentPermutationIndex * notesPerPattern;
@@ -681,7 +635,7 @@
         }
         
         function playNoteWithHighlight(note, noteDuration) {
-            const { string, fret, finger, order } = note;
+            const { string, fret, finger, position } = note;
             
             document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
             
@@ -702,13 +656,11 @@
             const ordinals = ['1st', '2nd', '3rd', '4th'];
             exerciseInfo.innerHTML = `
                 <span style="color: ${fingerColors[finger]}; font-weight: bold;">
-                    ${ordinals[order - 1]} note
+                    Finger ${finger} (${fingerNames[finger]})
                 </span> | 
                 String <strong>${stringNames[string]}</strong> | 
-                Fret <strong>${fret}</strong> | 
-                <span style="color: ${fingerColors[finger]}; font-weight: bold;">
-                    ${fingerNames[finger]} finger
-                </span>
+                Fret <strong>${fret}</strong> |
+                ${ordinals[position]} note in pattern
             `;
             
             updateProgress();
