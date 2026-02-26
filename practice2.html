@@ -198,13 +198,25 @@
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid transparent;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 10px;
             font-weight: bold;
             color: #555;
             transition: all 0.15s;
             position: relative;
+        }
+        
+        .fret-marker .finger-num {
+            font-size: 18px;
+            line-height: 1;
+        }
+        
+        .fret-marker .order-label {
+            font-size: 9px;
+            opacity: 0.8;
+            margin-top: 1px;
         }
         
         .fret.active .fret-marker {
@@ -308,19 +320,19 @@
         <div class="finger-legend">
             <div class="finger-item">
                 <div class="finger-color" style="background: #ff6b6b;">1</div>
-                <span>Index (Fret +0)</span>
+                <span>Index</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #ffd93d;">2</div>
-                <span>Middle (Fret +1)</span>
+                <span>Middle</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #6bcb77;">3</div>
-                <span>Ring (Fret +2)</span>
+                <span>Ring</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #9b59b6;">4</div>
-                <span>Pinky (Fret +3)</span>
+                <span>Pinky</span>
             </div>
         </div>
         
@@ -384,10 +396,6 @@
         };
         
         // Finger to fret offset mapping
-        // Finger 1 (index) = startFret + 0
-        // Finger 2 (middle) = startFret + 1
-        // Finger 3 (ring) = startFret + 2
-        // Finger 4 (pinky) = startFret + 3
         function fingerToFret(finger, startFret) {
             return startFret + (finger - 1);
         }
@@ -539,8 +547,17 @@
                     
                     const marker = document.createElement('div');
                     marker.className = 'fret-marker';
-                    marker.textContent = '';
                     
+                    const fingerNum = document.createElement('span');
+                    fingerNum.className = 'finger-num';
+                    fingerNum.textContent = '';
+                    
+                    const orderLabel = document.createElement('span');
+                    orderLabel.className = 'order-label';
+                    orderLabel.textContent = '';
+                    
+                    marker.appendChild(fingerNum);
+                    marker.appendChild(orderLabel);
                     fretDiv.appendChild(marker);
                     stringLine.appendChild(fretDiv);
                     
@@ -589,17 +606,19 @@
                 marker.style.background = 'rgba(255, 255, 255, 0.05)';
                 marker.style.borderColor = 'transparent';
                 marker.style.color = '#555';
-                marker.textContent = '';
+                marker.style.boxShadow = 'none';
+                
+                const fingerNum = marker.querySelector('.finger-num');
+                const orderLabel = marker.querySelector('.order-label');
+                fingerNum.textContent = '';
+                orderLabel.textContent = '';
             });
             
-            // Display finger numbers on fretboard
-            // Each finger always goes on its designated fret:
-            // Finger 1 -> startFret + 0
-            // Finger 2 -> startFret + 1
-            // Finger 3 -> startFret + 2
-            // Finger 4 -> startFret + 3
+            // Display fingers in the ORDER they will be played
+            // perm = [1,3,2,4] means: 1st play finger 1, 2nd play finger 3, 3rd play finger 2, 4th play finger 4
+            // Each finger goes to its own fret position, but we label them with play order
             for (let string = 0; string < 4; string++) {
-                for (let finger = 1; finger <= 4; finger++) {
+                perm.forEach((finger, orderIndex) => {
                     const fret = fingerToFret(finger, startFret);
                     const fretEl = document.querySelector(
                         `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
@@ -611,9 +630,17 @@
                         marker.style.borderColor = fingerColors[finger];
                         marker.style.color = '#fff';
                         marker.style.boxShadow = `0 0 10px ${fingerColors[finger]}50`;
-                        marker.textContent = finger; // Show finger number
+                        
+                        const fingerNum = marker.querySelector('.finger-num');
+                        const orderLabel = marker.querySelector('.order-label');
+                        
+                        // Show FINGER number (which finger to use)
+                        fingerNum.textContent = finger;
+                        // Show play ORDER (1st, 2nd, 3rd, 4th)
+                        const ordinals = ['1st', '2nd', '3rd', '4th'];
+                        orderLabel.textContent = ordinals[orderIndex];
                     }
-                }
+                });
             }
         }
         
@@ -622,12 +649,9 @@
             const notes = [];
             
             // Go through all 4 strings (G, D, A, E = 0, 1, 2, 3)
-            // For each string, play fingers in the ORDER specified by the permutation
-            // But each finger plays its own fret position
+            // Play fingers in the ORDER specified by the permutation
             for (let string = 0; string < 4; string++) {
                 perm.forEach((finger, orderIndex) => {
-                    // finger determines WHICH fret to play
-                    // orderIndex is just the sequence position
                     const fret = fingerToFret(finger, startFret);
                     notes.push({ string, fret, finger, orderIndex });
                 });
@@ -676,7 +700,7 @@
                 </span> | 
                 String <strong>${stringNames[string]}</strong> | 
                 Fret <strong>${fret}</strong> |
-                ${ordinals[orderIndex]} note
+                ${ordinals[orderIndex]} in sequence
             `;
             
             updateProgress();
