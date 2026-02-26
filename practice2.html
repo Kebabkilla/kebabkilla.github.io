@@ -130,17 +130,31 @@
         }
         
         .fretboard {
-            background: #2a2a2a;
+            background: linear-gradient(180deg, #3d2b1f 0%, #2a1f15 100%);
             border-radius: 10px;
             padding: 30px;
             overflow-x: auto;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .fret-numbers {
+            display: flex;
+            margin-left: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .fret-num {
+            width: 50px;
+            text-align: center;
+            color: #888;
+            font-size: 12px;
         }
         
         .string {
             display: flex;
             align-items: center;
-            margin: 15px 0;
+            margin: 12px 0;
             position: relative;
         }
         
@@ -153,17 +167,23 @@
         
         .string-line {
             flex: 1;
-            height: 3px;
-            background: linear-gradient(90deg, #666 0%, #888 50%, #666 100%);
+            height: 4px;
+            background: linear-gradient(90deg, #b8860b 0%, #daa520 50%, #b8860b 100%);
             position: relative;
             margin: 0 10px;
             border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
+        
+        .string[data-string="0"] .string-line { height: 2px; }
+        .string[data-string="1"] .string-line { height: 3px; }
+        .string[data-string="2"] .string-line { height: 4px; }
+        .string[data-string="3"] .string-line { height: 5px; }
         
         .fret {
             position: absolute;
             width: 50px;
-            height: 44px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -172,31 +192,45 @@
         }
         
         .fret-marker {
-            width: 32px;
-            height: 32px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.08);
-            border: 2px solid #444;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
-            color: #666;
+            font-size: 11px;
+            color: #555;
             transition: all 0.15s;
             position: relative;
         }
         
-        .fret.active .fret-marker {
-            transform: scale(1.5);
-            box-shadow: 0 0 30px currentColor;
-            color: #000 !important;
+        .fret-marker .order-number {
+            font-size: 18px;
             font-weight: bold;
+            line-height: 1;
+        }
+        
+        .fret-marker .finger-label {
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+        }
+        
+        .fret.active .fret-marker {
+            transform: scale(1.4);
+            box-shadow: 0 0 35px currentColor, 0 0 15px currentColor inset;
             z-index: 10;
+            border-color: #fff !important;
         }
         
         .fret.in-pattern .fret-marker {
             color: #fff;
             font-weight: bold;
+            border-width: 3px;
         }
         
         .exercise-info {
@@ -256,6 +290,14 @@
         .nav-btn:hover {
             background: rgba(255,255,255,0.2);
         }
+        
+        .fret-divider {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, #555 0%, #333 100%);
+            top: 0;
+        }
     </style>
 </head>
 <body>
@@ -309,19 +351,20 @@
         </div>
         
         <div class="fretboard" id="fretboard">
-            <div class="string">
+            <div class="fret-numbers" id="fretNumbers"></div>
+            <div class="string" data-string="0">
                 <div class="string-label">G</div>
                 <div class="string-line" data-string="0"></div>
             </div>
-            <div class="string">
+            <div class="string" data-string="1">
                 <div class="string-label">D</div>
                 <div class="string-line" data-string="1"></div>
             </div>
-            <div class="string">
+            <div class="string" data-string="2">
                 <div class="string-label">A</div>
                 <div class="string-line" data-string="2"></div>
             </div>
-            <div class="string">
+            <div class="string" data-string="3">
                 <div class="string-label">E</div>
                 <div class="string-line" data-string="3"></div>
             </div>
@@ -358,6 +401,13 @@
             2: 'Middle',
             3: 'Ring',
             4: 'Pinky'
+        };
+        
+        const fingerShortNames = {
+            1: 'IDX',
+            2: 'MID',
+            3: 'RNG',
+            4: 'PNK'
         };
         
         // Generate all 24 permutations of [1,2,3,4]
@@ -485,9 +535,18 @@
         const progressText = document.getElementById('progressText');
         const prevPatternBtn = document.getElementById('prevPattern');
         const nextPatternBtn = document.getElementById('nextPattern');
+        const fretNumbers = document.getElementById('fretNumbers');
         
         // Initialize fretboard
         function initFretboard() {
+            // Add fret numbers
+            for (let fret = 0; fret <= 15; fret++) {
+                const numDiv = document.createElement('div');
+                numDiv.className = 'fret-num';
+                numDiv.textContent = fret;
+                fretNumbers.appendChild(numDiv);
+            }
+            
             const strings = document.querySelectorAll('.string-line');
             strings.forEach((stringLine, stringIndex) => {
                 for (let fret = 0; fret <= 15; fret++) {
@@ -499,8 +558,17 @@
                     
                     const marker = document.createElement('div');
                     marker.className = 'fret-marker';
-                    marker.textContent = fret;
                     
+                    const orderNum = document.createElement('span');
+                    orderNum.className = 'order-number';
+                    orderNum.textContent = '';
+                    
+                    const fingerLabel = document.createElement('span');
+                    fingerLabel.className = 'finger-label';
+                    fingerLabel.textContent = '';
+                    
+                    marker.appendChild(orderNum);
+                    marker.appendChild(fingerLabel);
                     fretDiv.appendChild(marker);
                     stringLine.appendChild(fretDiv);
                     
@@ -546,14 +614,19 @@
             document.querySelectorAll('.fret').forEach(fret => {
                 fret.classList.remove('in-pattern', 'active');
                 const marker = fret.querySelector('.fret-marker');
-                marker.style.background = 'rgba(255, 255, 255, 0.08)';
-                marker.style.borderColor = '#444';
-                marker.style.color = '#666';
+                marker.style.background = 'rgba(255, 255, 255, 0.05)';
+                marker.style.borderColor = 'transparent';
+                marker.style.color = '#555';
+                
+                const orderNum = marker.querySelector('.order-number');
+                const fingerLabel = marker.querySelector('.finger-label');
+                orderNum.textContent = '';
+                fingerLabel.textContent = '';
             });
             
-            // Highlight pattern across all strings
+            // Highlight pattern across all strings with order numbers
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, i) => {
+                perm.forEach((finger, orderIndex) => {
                     const fret = startFret + (finger - 1);
                     const fretEl = document.querySelector(
                         `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
@@ -564,21 +637,29 @@
                         marker.style.background = fingerColors[finger];
                         marker.style.borderColor = fingerColors[finger];
                         marker.style.color = '#fff';
+                        marker.style.boxShadow = `0 0 10px ${fingerColors[finger]}50`;
+                        
+                        // Show order number (1st, 2nd, 3rd, 4th)
+                        const orderNum = marker.querySelector('.order-number');
+                        orderNum.textContent = orderIndex + 1;
+                        
+                        // Show finger label
+                        const fingerLabel = marker.querySelector('.finger-label');
+                        fingerLabel.textContent = fingerShortNames[finger];
                     }
                 });
             }
         }
         
         function buildFullExercise() {
-            // Build exercise: all 4 strings for current permutation
             const perm = allPermutations[currentPermutationIndex];
             const notes = [];
             
             // Go through all 4 strings (G, D, A, E = 0, 1, 2, 3)
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, i) => {
+                perm.forEach((finger, orderIndex) => {
                     const fret = startFret + (finger - 1);
-                    notes.push({ string, fret, finger });
+                    notes.push({ string, fret, finger, order: orderIndex + 1 });
                 });
             }
             
@@ -587,7 +668,7 @@
         
         function updateProgress() {
             const totalPatterns = 24;
-            const notesPerPattern = 16; // 4 fingers x 4 strings
+            const notesPerPattern = 16;
             totalNotesInExercise = totalPatterns * notesPerPattern;
             
             const currentPatternNotes = currentNoteIndex;
@@ -600,7 +681,7 @@
         }
         
         function playNoteWithHighlight(note, noteDuration) {
-            const { string, fret, finger } = note;
+            const { string, fret, finger, order } = note;
             
             document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
             
@@ -618,7 +699,17 @@
             playBassNote(string, fret, noteDuration);
             
             const stringNames = ['G', 'D', 'A', 'E'];
-            exerciseInfo.innerHTML = `String <strong>${stringNames[string]}</strong> | Fret <strong>${fret}</strong> | Finger <span style="color: ${fingerColors[finger]}; font-weight: bold;">${finger} (${fingerNames[finger]})</span>`;
+            const ordinals = ['1st', '2nd', '3rd', '4th'];
+            exerciseInfo.innerHTML = `
+                <span style="color: ${fingerColors[finger]}; font-weight: bold;">
+                    ${ordinals[order - 1]} note
+                </span> | 
+                String <strong>${stringNames[string]}</strong> | 
+                Fret <strong>${fret}</strong> | 
+                <span style="color: ${fingerColors[finger]}; font-weight: bold;">
+                    ${fingerNames[finger]} finger
+                </span>
+            `;
             
             updateProgress();
         }
@@ -630,18 +721,16 @@
             playBtn.disabled = true;
             stopBtn.disabled = false;
             
-            const exercise = buildFullExercise();
+            let exercise = buildFullExercise();
             const noteInterval = (60 / tempo) * 1000;
             const noteDuration = noteInterval / 1000 * 0.85;
             
             intervalId = setInterval(() => {
                 if (currentNoteIndex >= exercise.length) {
-                    // Move to next permutation
                     currentPermutationIndex++;
                     currentNoteIndex = 0;
                     
                     if (currentPermutationIndex >= allPermutations.length) {
-                        // Exercise complete!
                         currentPermutationIndex = 0;
                         stopPlayback();
                         exerciseInfo.innerHTML = '🎉 <strong>Exercise Complete!</strong> All 24 patterns finished!';
@@ -651,8 +740,7 @@
                     }
                     
                     updatePatternDisplay();
-                    exercise.length = 0;
-                    exercise.push(...buildFullExercise());
+                    exercise = buildFullExercise();
                 }
                 
                 playNoteWithHighlight(exercise[currentNoteIndex], noteDuration);
