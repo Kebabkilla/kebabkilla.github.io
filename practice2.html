@@ -129,6 +129,12 @@
             font-size: 14px;
         }
         
+        .direction-indicator {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #00ff88;
+        }
+        
         .fretboard {
             background: linear-gradient(180deg, #3d2b1f 0%, #2a1f15 100%);
             border-radius: 10px;
@@ -278,41 +284,6 @@
         .nav-btn:hover {
             background: rgba(255,255,255,0.2);
         }
-
-        .pattern-visual {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 8px;
-        }
-
-        .pattern-note {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            position: relative;
-        }
-
-        .pattern-note::after {
-            content: '→';
-            position: absolute;
-            right: -18px;
-            color: #666;
-            font-size: 16px;
-        }
-
-        .pattern-note:last-child::after {
-            content: '';
-        }
     </style>
 </head>
 <body>
@@ -343,19 +314,19 @@
         <div class="finger-legend">
             <div class="finger-item">
                 <div class="finger-color" style="background: #ff6b6b;">1</div>
-                <span>Index (Fret +0)</span>
+                <span>Index</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #ffd93d;">2</div>
-                <span>Middle (Fret +1)</span>
+                <span>Middle</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #6bcb77;">3</div>
-                <span>Ring (Fret +2)</span>
+                <span>Ring</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #9b59b6;">4</div>
-                <span>Pinky (Fret +3)</span>
+                <span>Pinky</span>
             </div>
         </div>
         
@@ -363,7 +334,7 @@
             <div class="pattern-number">Pattern <span id="patternNum">1</span> of 24</div>
             <div class="pattern-display" id="patternDisplay">1-2-3-4</div>
             <div id="patternDesc" style="color: #aaa; font-size: 14px;">Index → Middle → Ring → Pinky</div>
-            <div class="pattern-visual" id="patternVisual"></div>
+            <div class="direction-indicator" id="directionIndicator">↓ Forward: G → D → A → E | → Left to Right</div>
         </div>
         
         <div class="fretboard" id="fretboard">
@@ -406,10 +377,10 @@
     <script>
         // Finger colors
         const fingerColors = {
-            1: '#ff6b6b', // Index - Red
-            2: '#ffd93d', // Middle - Yellow
-            3: '#6bcb77', // Ring - Green
-            4: '#9b59b6'  // Pinky - Purple
+            1: '#ff6b6b',
+            2: '#ffd93d',
+            3: '#6bcb77',
+            4: '#9b59b6'
         };
         
         const fingerNames = {
@@ -419,12 +390,16 @@
             4: 'Pinky'
         };
         
-        // Finger to fret offset: finger 1 = +0, finger 2 = +1, finger 3 = +2, finger 4 = +3
-        function fingerToFret(finger, startFret) {
-            return startFret + (finger - 1);
+        // Note names
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const openNotes = { 0: 7, 1: 2, 2: 9, 3: 4 }; // G=7, D=2, A=9, E=4
+        
+        function getNoteName(string, fret) {
+            const noteIndex = (openNotes[string] + fret) % 12;
+            return noteNames[noteIndex];
         }
         
-        // Generate all 24 permutations of [1,2,3,4]
+        // Generate all 24 permutations
         function getPermutations(arr) {
             if (arr.length <= 1) return [arr];
             const result = [];
@@ -440,7 +415,7 @@
         
         const allPermutations = getPermutations([1, 2, 3, 4]);
         
-        // Audio Context
+        // Audio
         let audioContext;
         let masterGain;
         
@@ -454,20 +429,18 @@
         }
 
         const stringOpenFrequencies = {
-            0: 196.00, // G
-            1: 146.83, // D
-            2: 110.00, // A
-            3: 82.41   // E
+            0: 196.00,
+            1: 146.83,
+            2: 110.00,
+            3: 82.41
         };
 
         function getFretFrequency(string, fret) {
-            const openFreq = stringOpenFrequencies[string];
-            return openFreq * Math.pow(2, fret / 12);
+            return stringOpenFrequencies[string] * Math.pow(2, fret / 12);
         }
 
         function playBassNote(string, fret, duration = 0.3) {
             initAudio();
-            
             const now = audioContext.currentTime;
             const freq = getFretFrequency(string, fret);
             
@@ -497,7 +470,6 @@
             filter.Q.value = 1;
             
             const envelope = audioContext.createGain();
-            envelope.gain.value = 0;
             envelope.gain.setValueAtTime(0, now);
             envelope.gain.linearRampToValueAtTime(1, now + 0.01);
             envelope.gain.exponentialRampToValueAtTime(0.6, now + 0.08);
@@ -507,18 +479,15 @@
             osc1.connect(gain1);
             osc2.connect(gain2);
             osc3.connect(gain3);
-            
             gain1.connect(filter);
             gain2.connect(filter);
             gain3.connect(filter);
-            
             filter.connect(envelope);
             envelope.connect(masterGain);
             
             osc1.start(now);
             osc2.start(now);
             osc3.start(now);
-            
             osc1.stop(now + duration);
             osc2.stop(now + duration);
             osc3.stop(now + duration);
@@ -530,6 +499,7 @@
         let intervalId = null;
         let tempo = 70;
         let startFret = 5;
+        let isReverse = false;
         
         const tempoSlider = document.getElementById('tempoSlider');
         const tempoDisplay = document.getElementById('tempoDisplay');
@@ -543,30 +513,18 @@
         const patternDisplay = document.getElementById('patternDisplay');
         const patternNum = document.getElementById('patternNum');
         const patternDesc = document.getElementById('patternDesc');
-        const patternVisual = document.getElementById('patternVisual');
+        const directionIndicator = document.getElementById('directionIndicator');
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
         const prevPatternBtn = document.getElementById('prevPattern');
         const nextPatternBtn = document.getElementById('nextPattern');
         const fretNumbers = document.getElementById('fretNumbers');
         
-        // Note names for display
-        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        function getNoteName(string, fret) {
-            // Open string notes: G(0)=G, D(1)=D, A(2)=A, E(3)=E
-            const openNotes = { 0: 7, 1: 2, 2: 9, 3: 4 }; // G=7, D=2, A=9, E=4
-            const noteIndex = (openNotes[string] + fret) % 12;
-            return noteNames[noteIndex];
-        }
-        
-        // Initialize fretboard
         function initFretboard() {
-            // Add fret numbers
             for (let fret = 0; fret <= 15; fret++) {
                 const numDiv = document.createElement('div');
                 numDiv.className = 'fret-num';
                 numDiv.textContent = fret;
-                numDiv.id = `fret-label-${fret}`;
                 fretNumbers.appendChild(numDiv);
             }
             
@@ -596,18 +554,13 @@
         
         function highlightSingleNote(string, fret) {
             document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
-            const fretEl = document.querySelector(
-                `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
-            );
-            if (fretEl) {
-                fretEl.classList.add('active');
-            }
+            const fretEl = document.querySelector(`.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`);
+            if (fretEl) fretEl.classList.add('active');
         }
         
         function updatePatternDisplay() {
             const perm = allPermutations[currentPermutationIndex];
             
-            // Create colored pattern display
             let coloredPattern = '';
             perm.forEach((finger, i) => {
                 coloredPattern += `<span style="color: ${fingerColors[finger]}">${finger}</span>`;
@@ -618,23 +571,12 @@
             patternNum.textContent = currentPermutationIndex + 1;
             patternDesc.textContent = perm.map(f => fingerNames[f]).join(' → ');
             
-            // Create visual pattern preview
-            patternVisual.innerHTML = '';
-            perm.forEach((finger) => {
-                const noteDiv = document.createElement('div');
-                noteDiv.className = 'pattern-note';
-                noteDiv.style.background = fingerColors[finger];
-                noteDiv.textContent = finger;
-                patternVisual.appendChild(noteDiv);
-            });
-            
             highlightCurrentPattern();
         }
         
         function highlightCurrentPattern() {
             const perm = allPermutations[currentPermutationIndex];
             
-            // Clear all fret markers
             document.querySelectorAll('.fret').forEach(fret => {
                 fret.classList.remove('in-pattern', 'active');
                 const marker = fret.querySelector('.fret-marker');
@@ -645,18 +587,12 @@
                 marker.textContent = '';
             });
             
-            // Display fingers in PLAY ORDER from left to right on fretboard
-            // perm = [1,3,2,4] means play order: finger 1, then finger 3, then finger 2, then finger 4
-            // Position on fretboard is determined by finger number:
-            // Finger 1 always at startFret+0, Finger 2 at startFret+1, etc.
-            
+            // Display fingers in order on fretboard from LEFT to RIGHT
+            // perm[0] goes to position 0 (startFret), perm[1] goes to position 1 (startFret+1), etc.
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, orderIndex) => {
-                    // finger determines which fret (finger 1 = startFret, finger 3 = startFret+2, etc.)
-                    const fret = fingerToFret(finger, startFret);
-                    const fretEl = document.querySelector(
-                        `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
-                    );
+                perm.forEach((finger, position) => {
+                    const fret = startFret + position;
+                    const fretEl = document.querySelector(`.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`);
                     if (fretEl) {
                         fretEl.classList.add('in-pattern');
                         const marker = fretEl.querySelector('.fret-marker');
@@ -664,8 +600,7 @@
                         marker.style.borderColor = fingerColors[finger];
                         marker.style.color = '#fff';
                         marker.style.boxShadow = `0 0 10px ${fingerColors[finger]}50`;
-                        // Show the ORDER (1st, 2nd, 3rd, 4th) instead of finger number
-                        marker.textContent = orderIndex + 1;
+                        marker.textContent = finger; // Show FINGER number
                     }
                 });
             }
@@ -675,19 +610,38 @@
             const perm = allPermutations[currentPermutationIndex];
             const notes = [];
             
-            // Play in the ORDER of the permutation
-            // perm = [1,3,2,4] means:
-            // 1st: play finger 1 (fret = startFret + 0)
-            // 2nd: play finger 3 (fret = startFret + 2)
-            // 3rd: play finger 2 (fret = startFret + 1)
-            // 4th: play finger 4 (fret = startFret + 3)
-            
+            // FORWARD: G(0) → D(1) → A(2) → E(3), left to right
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, orderIndex) => {
-                    // The FINGER determines which FRET to play
-                    const fret = fingerToFret(finger, startFret);
-                    notes.push({ string, fret, finger, orderIndex });
-                });
+                for (let position = 0; position < 4; position++) {
+                    const finger = perm[position];
+                    const displayFret = startFret + position; // Visual position (left to right)
+                    const soundFret = startFret + (finger - 1); // Sound based on finger number
+                    notes.push({ 
+                        string, 
+                        displayFret, 
+                        soundFret, 
+                        finger, 
+                        position,
+                        direction: 'forward'
+                    });
+                }
+            }
+            
+            // REVERSE: E(3) → A(2) → D(1) → G(0), right to left
+            for (let string = 3; string >= 0; string--) {
+                for (let position = 3; position >= 0; position--) {
+                    const finger = perm[position];
+                    const displayFret = startFret + position;
+                    const soundFret = startFret + (finger - 1);
+                    notes.push({ 
+                        string, 
+                        displayFret, 
+                        soundFret, 
+                        finger, 
+                        position,
+                        direction: 'reverse'
+                    });
+                }
             }
             
             return notes;
@@ -695,48 +649,47 @@
         
         function updateProgress() {
             const totalPatterns = 24;
-            const notesPerPattern = 16;
+            const notesPerPattern = 32; // 16 forward + 16 reverse
             const totalNotesInExercise = totalPatterns * notesPerPattern;
             
-            const currentPatternNotes = currentNoteIndex;
-            const completedPatternNotes = currentPermutationIndex * notesPerPattern;
-            const totalPlayed = completedPatternNotes + currentPatternNotes;
-            
+            const totalPlayed = (currentPermutationIndex * notesPerPattern) + currentNoteIndex;
             const percent = Math.round((totalPlayed / totalNotesInExercise) * 100);
             progressFill.style.width = `${percent}%`;
             progressText.textContent = `${percent}% Complete (Pattern ${currentPermutationIndex + 1}/24)`;
         }
         
         function playNoteWithHighlight(note, noteDuration) {
-            const { string, fret, finger, orderIndex } = note;
+            const { string, displayFret, soundFret, finger, position, direction } = note;
             
             document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
             
-            const fretEl = document.querySelector(
-                `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
-            );
-            
+            // Highlight the DISPLAY position (left to right order)
+            const fretEl = document.querySelector(`.string-line[data-string="${string}"] .fret:nth-child(${displayFret + 1})`);
             if (fretEl) {
                 fretEl.classList.add('active');
                 const marker = fretEl.querySelector('.fret-marker');
                 marker.style.borderColor = '#fff';
             }
             
-            // Play the correct fret based on which finger
-            playBassNote(string, fret, noteDuration);
+            // Play the SOUND based on finger number
+            playBassNote(string, soundFret, noteDuration);
             
             const stringNames = ['G', 'D', 'A', 'E'];
-            const ordinals = ['1st', '2nd', '3rd', '4th'];
-            const noteName = getNoteName(string, fret);
+            const noteName = getNoteName(string, soundFret);
+            const directionText = direction === 'forward' ? '→ Forward' : '← Reverse';
+            
+            directionIndicator.textContent = direction === 'forward' 
+                ? '↓ Forward: G → D → A → E | → Left to Right'
+                : '↑ Reverse: E → A → D → G | ← Right to Left';
             
             exerciseInfo.innerHTML = `
-                ${ordinals[orderIndex]} note: 
                 <span style="color: ${fingerColors[finger]}; font-weight: bold;">
                     Finger ${finger} (${fingerNames[finger]})
                 </span> | 
                 String <strong>${stringNames[string]}</strong> | 
-                Fret <strong>${fret}</strong> |
-                Note <strong>${noteName}</strong>
+                Fret <strong>${soundFret}</strong> |
+                Note <strong>${noteName}</strong> |
+                ${directionText}
             `;
             
             updateProgress();
@@ -787,11 +740,9 @@
             }
         }
         
-        // Event listeners
         tempoSlider.addEventListener('input', (e) => {
             tempo = parseInt(e.target.value);
             tempoDisplay.textContent = tempo;
-            
             if (isPlaying) {
                 stopPlayback();
                 startPlayback();
@@ -807,9 +758,7 @@
         volumeSlider.addEventListener('input', (e) => {
             const volume = parseInt(e.target.value);
             volumeDisplay.textContent = volume;
-            if (masterGain) {
-                masterGain.gain.value = volume / 100;
-            }
+            if (masterGain) masterGain.gain.value = volume / 100;
         });
         
         playBtn.addEventListener('click', startPlayback);
@@ -821,7 +770,6 @@
                 currentNoteIndex = 0;
                 updatePatternDisplay();
                 updateProgress();
-                
                 if (isPlaying) {
                     stopPlayback();
                     startPlayback();
@@ -835,7 +783,6 @@
                 currentNoteIndex = 0;
                 updatePatternDisplay();
                 updateProgress();
-                
                 if (isPlaying) {
                     stopPlayback();
                     startPlayback();
@@ -843,7 +790,6 @@
             }
         });
         
-        // Initialize
         initFretboard();
         updatePatternDisplay();
         updateProgress();
