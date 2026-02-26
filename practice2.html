@@ -308,19 +308,19 @@
         <div class="finger-legend">
             <div class="finger-item">
                 <div class="finger-color" style="background: #ff6b6b;">1</div>
-                <span>Index</span>
+                <span>Index (Fret +0)</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #ffd93d;">2</div>
-                <span>Middle</span>
+                <span>Middle (Fret +1)</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #6bcb77;">3</div>
-                <span>Ring</span>
+                <span>Ring (Fret +2)</span>
             </div>
             <div class="finger-item">
                 <div class="finger-color" style="background: #9b59b6;">4</div>
-                <span>Pinky</span>
+                <span>Pinky (Fret +3)</span>
             </div>
         </div>
         
@@ -382,6 +382,15 @@
             3: 'Ring',
             4: 'Pinky'
         };
+        
+        // Finger to fret offset mapping
+        // Finger 1 (index) = startFret + 0
+        // Finger 2 (middle) = startFret + 1
+        // Finger 3 (ring) = startFret + 2
+        // Finger 4 (pinky) = startFret + 3
+        function fingerToFret(finger, startFret) {
+            return startFret + (finger - 1);
+        }
         
         // Generate all 24 permutations of [1,2,3,4]
         function getPermutations(arr) {
@@ -583,12 +592,15 @@
                 marker.textContent = '';
             });
             
-            // Display finger numbers in order on the fretboard
-            // perm = [1,2,3,4] means: fret+0 gets finger 1, fret+1 gets finger 2, etc.
-            // perm = [2,1,3,4] means: fret+0 gets finger 2, fret+1 gets finger 1, etc.
+            // Display finger numbers on fretboard
+            // Each finger always goes on its designated fret:
+            // Finger 1 -> startFret + 0
+            // Finger 2 -> startFret + 1
+            // Finger 3 -> startFret + 2
+            // Finger 4 -> startFret + 3
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, position) => {
-                    const fret = startFret + position;
+                for (let finger = 1; finger <= 4; finger++) {
+                    const fret = fingerToFret(finger, startFret);
                     const fretEl = document.querySelector(
                         `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
                     );
@@ -601,7 +613,7 @@
                         marker.style.boxShadow = `0 0 10px ${fingerColors[finger]}50`;
                         marker.textContent = finger; // Show finger number
                     }
-                });
+                }
             }
         }
         
@@ -610,10 +622,14 @@
             const notes = [];
             
             // Go through all 4 strings (G, D, A, E = 0, 1, 2, 3)
+            // For each string, play fingers in the ORDER specified by the permutation
+            // But each finger plays its own fret position
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, position) => {
-                    const fret = startFret + position;
-                    notes.push({ string, fret, finger, position });
+                perm.forEach((finger, orderIndex) => {
+                    // finger determines WHICH fret to play
+                    // orderIndex is just the sequence position
+                    const fret = fingerToFret(finger, startFret);
+                    notes.push({ string, fret, finger, orderIndex });
                 });
             }
             
@@ -635,7 +651,7 @@
         }
         
         function playNoteWithHighlight(note, noteDuration) {
-            const { string, fret, finger, position } = note;
+            const { string, fret, finger, orderIndex } = note;
             
             document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
             
@@ -660,7 +676,7 @@
                 </span> | 
                 String <strong>${stringNames[string]}</strong> | 
                 Fret <strong>${fret}</strong> |
-                ${ordinals[position]} note in pattern
+                ${ordinals[orderIndex]} note
             `;
             
             updateProgress();
