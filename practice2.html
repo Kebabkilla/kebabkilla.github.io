@@ -198,25 +198,13 @@
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid transparent;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 20px;
             font-weight: bold;
             color: #555;
             transition: all 0.15s;
             position: relative;
-        }
-        
-        .fret-marker .finger-num {
-            font-size: 18px;
-            line-height: 1;
-        }
-        
-        .fret-marker .order-label {
-            font-size: 9px;
-            opacity: 0.8;
-            margin-top: 1px;
         }
         
         .fret.active .fret-marker {
@@ -290,6 +278,41 @@
         .nav-btn:hover {
             background: rgba(255,255,255,0.2);
         }
+
+        .pattern-visual {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+        }
+
+        .pattern-note {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            position: relative;
+        }
+
+        .pattern-note::after {
+            content: '→';
+            position: absolute;
+            right: -18px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .pattern-note:last-child::after {
+            content: '';
+        }
     </style>
 </head>
 <body>
@@ -340,6 +363,7 @@
             <div class="pattern-number">Pattern <span id="patternNum">1</span> of 24</div>
             <div class="pattern-display" id="patternDisplay">1-2-3-4</div>
             <div id="patternDesc" style="color: #aaa; font-size: 14px;">Index → Middle → Ring → Pinky</div>
+            <div class="pattern-visual" id="patternVisual"></div>
         </div>
         
         <div class="fretboard" id="fretboard">
@@ -519,6 +543,7 @@
         const patternDisplay = document.getElementById('patternDisplay');
         const patternNum = document.getElementById('patternNum');
         const patternDesc = document.getElementById('patternDesc');
+        const patternVisual = document.getElementById('patternVisual');
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
         const prevPatternBtn = document.getElementById('prevPattern');
@@ -547,17 +572,8 @@
                     
                     const marker = document.createElement('div');
                     marker.className = 'fret-marker';
+                    marker.textContent = '';
                     
-                    const fingerNum = document.createElement('span');
-                    fingerNum.className = 'finger-num';
-                    fingerNum.textContent = '';
-                    
-                    const orderLabel = document.createElement('span');
-                    orderLabel.className = 'order-label';
-                    orderLabel.textContent = '';
-                    
-                    marker.appendChild(fingerNum);
-                    marker.appendChild(orderLabel);
                     fretDiv.appendChild(marker);
                     stringLine.appendChild(fretDiv);
                     
@@ -593,6 +609,16 @@
             patternNum.textContent = currentPermutationIndex + 1;
             patternDesc.textContent = perm.map(f => fingerNames[f]).join(' → ');
             
+            // Create visual pattern preview
+            patternVisual.innerHTML = '';
+            perm.forEach((finger) => {
+                const noteDiv = document.createElement('div');
+                noteDiv.className = 'pattern-note';
+                noteDiv.style.background = fingerColors[finger];
+                noteDiv.textContent = finger;
+                patternVisual.appendChild(noteDiv);
+            });
+            
             highlightCurrentPattern();
         }
         
@@ -607,19 +633,21 @@
                 marker.style.borderColor = 'transparent';
                 marker.style.color = '#555';
                 marker.style.boxShadow = 'none';
-                
-                const fingerNum = marker.querySelector('.finger-num');
-                const orderLabel = marker.querySelector('.order-label');
-                fingerNum.textContent = '';
-                orderLabel.textContent = '';
+                marker.textContent = '';
             });
             
-            // Display fingers in the ORDER they will be played
-            // perm = [1,3,2,4] means: 1st play finger 1, 2nd play finger 3, 3rd play finger 2, 4th play finger 4
-            // Each finger goes to its own fret position, but we label them with play order
+            // NOW: Display fingers in PLAY ORDER from left to right on fretboard
+            // perm = [1,3,2,4] means:
+            // - 1st position (startFret + 0): show "1" (play first, use index)
+            // - 2nd position (startFret + 1): show "3" (play second, use ring)
+            // - 3rd position (startFret + 2): show "2" (play third, use middle)
+            // - 4th position (startFret + 3): show "4" (play fourth, use pinky)
+            
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, orderIndex) => {
-                    const fret = fingerToFret(finger, startFret);
+                perm.forEach((finger, position) => {
+                    // position = 0,1,2,3 (left to right on fretboard)
+                    // finger = which finger number to show at this position
+                    const fret = startFret + position;
                     const fretEl = document.querySelector(
                         `.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`
                     );
@@ -630,15 +658,7 @@
                         marker.style.borderColor = fingerColors[finger];
                         marker.style.color = '#fff';
                         marker.style.boxShadow = `0 0 10px ${fingerColors[finger]}50`;
-                        
-                        const fingerNum = marker.querySelector('.finger-num');
-                        const orderLabel = marker.querySelector('.order-label');
-                        
-                        // Show FINGER number (which finger to use)
-                        fingerNum.textContent = finger;
-                        // Show play ORDER (1st, 2nd, 3rd, 4th)
-                        const ordinals = ['1st', '2nd', '3rd', '4th'];
-                        orderLabel.textContent = ordinals[orderIndex];
+                        marker.textContent = finger;
                     }
                 });
             }
@@ -648,12 +668,14 @@
             const perm = allPermutations[currentPermutationIndex];
             const notes = [];
             
-            // Go through all 4 strings (G, D, A, E = 0, 1, 2, 3)
-            // Play fingers in the ORDER specified by the permutation
+            // Play in order from left to right (position 0, 1, 2, 3)
+            // The finger at each position determines the sound
             for (let string = 0; string < 4; string++) {
-                perm.forEach((finger, orderIndex) => {
-                    const fret = fingerToFret(finger, startFret);
-                    notes.push({ string, fret, finger, orderIndex });
+                perm.forEach((finger, position) => {
+                    // position determines fret location (left to right)
+                    // finger determines which finger is used (and shown)
+                    const fret = startFret + position;
+                    notes.push({ string, fret, finger, position });
                 });
             }
             
@@ -675,7 +697,7 @@
         }
         
         function playNoteWithHighlight(note, noteDuration) {
-            const { string, fret, finger, orderIndex } = note;
+            const { string, fret, finger, position } = note;
             
             document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
             
@@ -686,7 +708,6 @@
             if (fretEl) {
                 fretEl.classList.add('active');
                 const marker = fretEl.querySelector('.fret-marker');
-                marker.style.background = fingerColors[finger];
                 marker.style.borderColor = '#fff';
             }
             
@@ -700,7 +721,7 @@
                 </span> | 
                 String <strong>${stringNames[string]}</strong> | 
                 Fret <strong>${fret}</strong> |
-                ${ordinals[orderIndex]} in sequence
+                ${ordinals[position]} note
             `;
             
             updateProgress();
