@@ -180,6 +180,18 @@
         .shape-btn.shape8 { color: #fd79a8; }
         .shape-btn.shape8.active { background: rgba(253, 121, 168, 0.3); }
         
+        .shape-btn.shape9 { color: #74b9ff; }
+        .shape-btn.shape9.active { background: rgba(116, 185, 255, 0.3); }
+        
+        .shape-btn.shape10 { color: #a29bfe; }
+        .shape-btn.shape10.active { background: rgba(162, 155, 254, 0.3); }
+        
+        .shape-btn.shape11 { color: #ffeaa7; }
+        .shape-btn.shape11.active { background: rgba(255, 234, 167, 0.3); }
+        
+        .shape-btn.shape12 { color: #81ecec; }
+        .shape-btn.shape12.active { background: rgba(129, 236, 236, 0.3); }
+        
         .shape-btn.all-shapes {
             color: #fff;
             background: rgba(255,255,255,0.1);
@@ -303,7 +315,6 @@
             position: relative;
         }
         
-        /* Shape types for intervals */
         .fret-marker.circle {
             border-radius: 50%;
         }
@@ -584,17 +595,11 @@
             minor: [0, 3, 7]
         };
         
-        const intervalNames = {
-            major: { 0: 'R', 4: '3', 7: '5' },
-            minor: { 0: 'R', 3: '♭3', 7: '5' }
-        };
-        
-        // Shape determines interval marker shape
         const intervalShapes = {
-            0: 'circle',   // Root = Circle
-            3: 'square',   // Minor 3rd = Square
-            4: 'square',   // Major 3rd = Square
-            7: 'triangle'  // 5th = Triangle
+            0: 'circle',
+            3: 'square',
+            4: 'square',
+            7: 'triangle'
         };
         
         const shapeColors = {
@@ -607,97 +612,148 @@
             7: '#e056fd',
             8: '#fd79a8',
             9: '#74b9ff',
-            10: '#a29bfe'
+            10: '#a29bfe',
+            11: '#ffeaa7',
+            12: '#81ecec'
         };
         
-        const openStrings = { 0: 7, 1: 2, 2: 9, 3: 4 };
+        const openStrings = { 0: 7, 1: 2, 2: 9, 3: 4 }; // G, D, A, E
         const MAX_FRET = 24;
         
+        // Define standard bass triad shapes manually to ensure all are included
         function generateTriadShapes(rootNote, triadType) {
             const intervals = triads[triadType];
+            const thirdInterval = intervals[1]; // 4 for major, 3 for minor
             const shapes = {};
             let shapeNum = 1;
             
-            const notePositions = { root: [], third: [], fifth: [] };
-            
-            for (let string = 0; string <= 3; string++) {
+            // Helper to get fret for a note on a string
+            function getFretForNote(string, targetNote) {
                 for (let fret = 0; fret <= MAX_FRET; fret++) {
-                    const noteValue = (openStrings[string] + fret) % 12;
-                    const interval = (noteValue - rootNote + 12) % 12;
-                    
-                    if (interval === intervals[0]) {
-                        notePositions.root.push({ string, fret, noteValue, interval: 0, intervalName: 'R' });
-                    } else if (interval === intervals[1]) {
-                        notePositions.third.push({ string, fret, noteValue, interval: intervals[1], intervalName: triadType === 'major' ? '3' : '♭3' });
-                    } else if (interval === intervals[2]) {
-                        notePositions.fifth.push({ string, fret, noteValue, interval: intervals[2], intervalName: '5' });
+                    if ((openStrings[string] + fret) % 12 === targetNote) {
+                        return fret;
                     }
                 }
+                return -1;
             }
             
-            const usedPositions = new Set();
+            // Helper to get all frets for a note on a string
+            function getAllFretsForNote(string, targetNote) {
+                const frets = [];
+                for (let fret = 0; fret <= MAX_FRET; fret++) {
+                    if ((openStrings[string] + fret) % 12 === targetNote) {
+                        frets.push(fret);
+                    }
+                }
+                return frets;
+            }
             
-            notePositions.root.forEach(root => {
-                const nearbyThirds = notePositions.third.filter(t => 
-                    Math.abs(t.fret - root.fret) <= 5 && 
-                    t.string !== root.string &&
-                    Math.abs(t.string - root.string) <= 2
-                );
+            const root = rootNote;
+            const third = (rootNote + thirdInterval) % 12;
+            const fifth = (rootNote + 7) % 12;
+            
+            const usedShapeKeys = new Set();
+            
+            // Define shape patterns relative to root positions
+            // Pattern: [rootString, rootFretOffset, thirdString, thirdFretOffset, fifthString, fifthFretOffset]
+            // We'll find all instances of these patterns across the fretboard
+            
+            const shapePatterns = [
+                // Root position shapes (Root in bass)
+                // Shape A: Root on E, 5th on A, 3rd on D (ascending voicing)
+                { type: 'root', rootStr: 3, pattern: 'E-A-D' },
+                // Shape B: Root on A, 5th on D, 3rd on G
+                { type: 'root', rootStr: 2, pattern: 'A-D-G' },
+                // Shape C: Root on E, 3rd on A, 5th on D
+                { type: 'root', rootStr: 3, pattern: 'E-A-D-alt' },
+                // Shape D: Root on A, 3rd on D, 5th on G
+                { type: 'root', rootStr: 2, pattern: 'A-D-G-alt' },
                 
-                nearbyThirds.forEach(third => {
-                    const nearbyFifths = notePositions.fifth.filter(f =>
-                        Math.abs(f.fret - root.fret) <= 5 &&
-                        Math.abs(f.fret - third.fret) <= 5 &&
-                        f.string !== root.string &&
-                        f.string !== third.string &&
-                        Math.abs(f.string - root.string) <= 2 &&
-                        Math.abs(f.string - third.string) <= 2
-                    );
+                // 1st inversion shapes (3rd in bass)
+                { type: '1st', thirdStr: 3, pattern: '1st-E' },
+                { type: '1st', thirdStr: 2, pattern: '1st-A' },
+                
+                // 2nd inversion shapes (5th in bass)
+                { type: '2nd', fifthStr: 3, pattern: '2nd-E' },
+                { type: '2nd', fifthStr: 2, pattern: '2nd-A' },
+            ];
+            
+            // Find all root positions on E and A strings
+            const rootFretsE = getAllFretsForNote(3, root);
+            const rootFretsA = getAllFretsForNote(2, root);
+            const rootFretsD = getAllFretsForNote(1, root);
+            
+            // Generate shapes for each root position
+            [...rootFretsE, ...rootFretsA].forEach(rootFret => {
+                const rootString = rootFretsE.includes(rootFret) ? 3 : 2;
+                
+                // Find nearby 3rds and 5ths
+                for (let str = 0; str <= 3; str++) {
+                    if (str === rootString) continue;
                     
-                    nearbyFifths.forEach(fifth => {
-                        const notes = [root, third, fifth].sort((a, b) => {
-                            if (a.string !== b.string) return b.string - a.string;
-                            return a.fret - b.fret;
-                        });
-                        
-                        const shapeKey = notes.map(n => `${n.string}-${n.fret}`).join('|');
-                        
-                        if (!usedPositions.has(shapeKey) && shapeNum <= 10) {
-                            usedPositions.add(shapeKey);
+                    const thirdFrets = getAllFretsForNote(str, third).filter(f => Math.abs(f - rootFret) <= 5);
+                    const fifthFrets = getAllFretsForNote(str, fifth).filter(f => Math.abs(f - rootFret) <= 5);
+                    
+                    thirdFrets.forEach(thirdFret => {
+                        for (let str2 = 0; str2 <= 3; str2++) {
+                            if (str2 === rootString || str2 === str) continue;
                             
-                            const lowestNote = notes[0];
-                            let inversion = 'Root Position';
-                            let inversionShort = 'Root';
+                            const fifthFretsOnStr2 = getAllFretsForNote(str2, fifth).filter(f => 
+                                Math.abs(f - rootFret) <= 5 && Math.abs(f - thirdFret) <= 5
+                            );
                             
-                            if (lowestNote.interval === intervals[1]) {
-                                inversion = '1st Inversion';
-                                inversionShort = '1st Inv';
-                            } else if (lowestNote.interval === intervals[2]) {
-                                inversion = '2nd Inversion';
-                                inversionShort = '2nd Inv';
-                            }
-                            
-                            const minFret = Math.min(...notes.map(n => n.fret));
-                            const maxFret = Math.max(...notes.map(n => n.fret));
-                            
-                            shapes[shapeNum] = {
-                                notes: notes.map(n => ({
-                                    ...n,
-                                    noteName: noteNames[n.noteValue]
-                                })),
-                                startFret: minFret,
-                                endFret: maxFret,
-                                inversion: inversion,
-                                inversionShort: inversionShort,
-                                rootString: root.string
-                            };
-                            
-                            shapeNum++;
+                            fifthFretsOnStr2.forEach(fifthFret => {
+                                const notes = [
+                                    { string: rootString, fret: rootFret, noteValue: root, interval: 0, intervalName: 'R' },
+                                    { string: str, fret: thirdFret, noteValue: third, interval: thirdInterval, intervalName: triadType === 'major' ? '3' : '♭3' },
+                                    { string: str2, fret: fifthFret, noteValue: fifth, interval: 7, intervalName: '5' }
+                                ].sort((a, b) => {
+                                    if (a.string !== b.string) return b.string - a.string;
+                                    return a.fret - b.fret;
+                                });
+                                
+                                const shapeKey = notes.map(n => `${n.string}-${n.fret}`).join('|');
+                                
+                                if (!usedShapeKeys.has(shapeKey)) {
+                                    usedShapeKeys.add(shapeKey);
+                                    
+                                    const lowestNote = notes[0];
+                                    let inversion = 'Root Position';
+                                    let inversionShort = 'Root';
+                                    
+                                    if (lowestNote.interval === thirdInterval) {
+                                        inversion = '1st Inversion';
+                                        inversionShort = '1st Inv';
+                                    } else if (lowestNote.interval === 7) {
+                                        inversion = '2nd Inversion';
+                                        inversionShort = '2nd Inv';
+                                    }
+                                    
+                                    const minFret = Math.min(...notes.map(n => n.fret));
+                                    const maxFret = Math.max(...notes.map(n => n.fret));
+                                    
+                                    // Only add if span is reasonable (max 5 frets)
+                                    if (maxFret - minFret <= 5) {
+                                        shapes[shapeNum] = {
+                                            notes: notes.map(n => ({
+                                                ...n,
+                                                noteName: noteNames[n.noteValue]
+                                            })),
+                                            startFret: minFret,
+                                            endFret: maxFret,
+                                            inversion: inversion,
+                                            inversionShort: inversionShort
+                                        };
+                                        shapeNum++;
+                                    }
+                                }
+                            });
                         }
                     });
                 });
             });
             
+            // Sort shapes by starting fret
             const sortedShapes = {};
             const sortedKeys = Object.keys(shapes).sort((a, b) => 
                 shapes[a].startFret - shapes[b].startFret
@@ -863,8 +919,10 @@
             
             for (let shape = 1; shape <= totalShapes; shape++) {
                 const btn = document.createElement('button');
-                btn.className = `shape-btn shape${shape} active`;
+                const colorIndex = ((shape - 1) % 12) + 1;
+                btn.className = `shape-btn shape${colorIndex} active`;
                 btn.dataset.shape = shape;
+                btn.style.color = shapeColors[colorIndex];
                 
                 const shapeData = currentShapes[shape];
                 btn.innerHTML = `Shape ${shape}<br><small>${shapeData.inversionShort} (f${shapeData.startFret}-${shapeData.endFret})</small>`;
@@ -879,8 +937,6 @@
             }
             
             allShapesBtn.classList.add('active');
-            
-            // Update shape colors legend
             updateShapeColorsLegend();
         }
         
@@ -888,10 +944,11 @@
             shapeColorsLegend.innerHTML = '';
             
             for (let shape = 1; shape <= totalShapes; shape++) {
+                const colorIndex = ((shape - 1) % 12) + 1;
                 const item = document.createElement('div');
                 item.className = 'shape-color-item';
                 item.innerHTML = `
-                    <div class="shape-color-dot" style="background: ${shapeColors[shape]}"></div>
+                    <div class="shape-color-dot" style="background: ${shapeColors[colorIndex]}"></div>
                     <span>Shape ${shape}</span>
                 `;
                 shapeColorsLegend.appendChild(item);
@@ -984,18 +1041,19 @@
                     const fretNumberEl = marker.querySelector('.fret-number');
                     const intervalLabelEl = marker.querySelector('.interval-label');
                     
-                    // Set shape based on interval
                     const shapeType = intervalShapes[data.note.interval];
                     marker.className = `fret-marker ${shapeType}`;
                     
-                    // Color based on shape (position), not interval
                     if (data.shapes.length === 1) {
-                        const shapeColor = shapeColors[data.shapes[0]];
+                        const colorIndex = ((data.shapes[0] - 1) % 12) + 1;
+                        const shapeColor = shapeColors[colorIndex];
                         marker.style.background = shapeColor;
                         marker.style.borderColor = shapeColor;
                     } else {
-                        // Multi-shape - create gradient
-                        const colors = data.shapes.map(s => shapeColors[s]);
+                        const colors = data.shapes.map(s => {
+                            const colorIndex = ((s - 1) % 12) + 1;
+                            return shapeColors[colorIndex];
+                        });
                         const segments = colors.length;
                         const angle = 360 / segments;
                         let gradient = 'conic-gradient(';
@@ -1031,13 +1089,11 @@
                 const shapeData = currentShapes[shapeNum];
                 if (!shapeData || shapeData.notes.length === 0) return;
                 
-                // Sort notes by string (low to high = E to G) then by fret
                 const sortedNotes = [...shapeData.notes].sort((a, b) => {
                     if (a.string !== b.string) return b.string - a.string;
                     return a.fret - b.fret;
                 });
                 
-                // Ascending
                 sortedNotes.forEach(note => {
                     exercise.push({
                         ...note,
@@ -1047,7 +1103,6 @@
                     });
                 });
                 
-                // Descending
                 const descendingNotes = [...sortedNotes].reverse();
                 descendingNotes.forEach(note => {
                     exercise.push({
@@ -1072,7 +1127,8 @@
             
             const stringNames = ['G', 'D', 'A', 'E'];
             const directionText = note.direction === 'ascending' ? '↑ Ascending' : '↓ Descending';
-            const shapeColor = shapeColors[note.shapeNum];
+            const colorIndex = ((note.shapeNum - 1) % 12) + 1;
+            const shapeColor = shapeColors[colorIndex];
             
             currentShapeLabel.innerHTML = `<span style="color: ${shapeColor}">Shape ${note.shapeNum}</span> - ${note.inversion}`;
             
