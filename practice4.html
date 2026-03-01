@@ -1,0 +1,1223 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bass Triad Exercise - Major & Minor</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 10px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .control-group label {
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        input[type="range"] {
+            width: 150px;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: none;
+            background: #333;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        button {
+            background: #00d4ff;
+            color: #1a1a2e;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00b8e6;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+        
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .triad-type-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .triad-type-btn {
+            padding: 10px 25px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+        }
+        
+        .triad-type-btn.active {
+            background: #00d4ff;
+            border-color: #00d4ff;
+        }
+        
+        .triad-type-btn.major.active {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+        
+        .triad-type-btn.minor.active {
+            background: #6bcb77;
+            border-color: #6bcb77;
+        }
+        
+        .shapes-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .shapes-title {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #aaa;
+            font-size: 14px;
+        }
+        
+        .shapes-grid {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .shape-btn {
+            padding: 8px 14px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            min-width: 120px;
+        }
+        
+        .shape-btn.active {
+            border-color: currentColor;
+        }
+        
+        .shape-btn.shape1 { color: #ff6b6b; }
+        .shape-btn.shape1.active { background: rgba(255, 107, 107, 0.3); }
+        
+        .shape-btn.shape2 { color: #ff9f43; }
+        .shape-btn.shape2.active { background: rgba(255, 159, 67, 0.3); }
+        
+        .shape-btn.shape3 { color: #ffd93d; }
+        .shape-btn.shape3.active { background: rgba(255, 217, 61, 0.3); }
+        
+        .shape-btn.shape4 { color: #6bcb77; }
+        .shape-btn.shape4.active { background: rgba(107, 203, 119, 0.3); }
+        
+        .shape-btn.shape5 { color: #00d4ff; }
+        .shape-btn.shape5.active { background: rgba(0, 212, 255, 0.3); }
+        
+        .shape-btn.shape6 { color: #9b59b6; }
+        .shape-btn.shape6.active { background: rgba(155, 89, 182, 0.3); }
+        
+        .shape-btn.shape7 { color: #e056fd; }
+        .shape-btn.shape7.active { background: rgba(224, 86, 253, 0.3); }
+        
+        .shape-btn.shape8 { color: #fd79a8; }
+        .shape-btn.shape8.active { background: rgba(253, 121, 168, 0.3); }
+        
+        .shape-btn.all-shapes {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .shape-btn.all-shapes.active {
+            background: rgba(255,255,255,0.3);
+            border-color: #fff;
+        }
+        
+        .current-info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .key-display {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .triad-display {
+            font-size: 18px;
+            color: #aaa;
+            font-family: monospace;
+        }
+        
+        .interval-display {
+            font-size: 14px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .fretboard-wrapper {
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        .fretboard {
+            background: linear-gradient(180deg, #3d2b1f 0%, #2a1f15 100%);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            min-width: 1100px;
+        }
+        
+        .fret-numbers {
+            display: flex;
+            margin-left: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .fret-num {
+            width: 42px;
+            text-align: center;
+            color: #888;
+            font-size: 11px;
+        }
+        
+        .fret-num.has-note {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+        
+        .string {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .string-label {
+            width: 40px;
+            font-weight: bold;
+            color: #00d4ff;
+            font-size: 16px;
+        }
+        
+        .string-line {
+            flex: 1;
+            height: 4px;
+            background: linear-gradient(90deg, #b8860b 0%, #daa520 50%, #b8860b 100%);
+            position: relative;
+            margin: 0 10px;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .string[data-string="0"] .string-line { height: 2px; }
+        .string[data-string="1"] .string-line { height: 3px; }
+        .string[data-string="2"] .string-line { height: 4px; }
+        .string[data-string="3"] .string-line { height: 5px; }
+        
+        .fret {
+            position: absolute;
+            width: 42px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .fret-marker {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #444;
+            transition: all 0.15s;
+            position: relative;
+        }
+        
+        /* Shape types for intervals */
+        .fret-marker.circle {
+            border-radius: 50%;
+        }
+        
+        .fret-marker.square {
+            border-radius: 4px;
+        }
+        
+        .fret-marker.triangle {
+            border-radius: 0;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            width: 38px;
+            height: 34px;
+        }
+        
+        .fret-marker .fret-number {
+            font-size: 14px;
+            line-height: 1;
+        }
+        
+        .fret-marker .interval-label {
+            font-size: 8px;
+            opacity: 0.9;
+            margin-top: 1px;
+        }
+        
+        .fret-marker.triangle .fret-number {
+            margin-top: 6px;
+            font-size: 12px;
+        }
+        
+        .fret-marker.triangle .interval-label {
+            font-size: 7px;
+        }
+        
+        .fret.active .fret-marker {
+            transform: scale(1.5);
+            box-shadow: 0 0 30px currentColor;
+            z-index: 10;
+            border-color: #fff !important;
+        }
+        
+        .fret.active .fret-marker.triangle {
+            filter: drop-shadow(0 0 15px currentColor);
+        }
+        
+        .fret.in-triad .fret-marker {
+            color: #fff;
+            font-weight: bold;
+            border-width: 2px;
+        }
+        
+        .fret.root .fret-marker {
+            border-width: 3px;
+        }
+        
+        .exercise-info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+            color: #00d4ff;
+            min-height: 30px;
+        }
+        
+        .tempo-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff88;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #ccc;
+        }
+        
+        .legend-shape {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #888;
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .legend-shape.circle {
+            border-radius: 50%;
+        }
+        
+        .legend-shape.square {
+            border-radius: 3px;
+        }
+        
+        .legend-shape.triangle {
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            width: 26px;
+            height: 22px;
+            padding-top: 4px;
+        }
+        
+        .shape-colors-legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .shape-color-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: #aaa;
+        }
+        
+        .shape-color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .nav-btn {
+            padding: 8px 20px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .current-shape-display {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎸 Bass Triad Exercise</h1>
+        <p class="subtitle">Major & Minor Triads - All Shapes Across the Fretboard</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Root Note</label>
+                <select id="keySelect">
+                    <option value="0">C</option>
+                    <option value="1">C# / Db</option>
+                    <option value="2">D</option>
+                    <option value="3">D# / Eb</option>
+                    <option value="4">E</option>
+                    <option value="5">F</option>
+                    <option value="6">F# / Gb</option>
+                    <option value="7">G</option>
+                    <option value="8">G# / Ab</option>
+                    <option value="9">A</option>
+                    <option value="10">A# / Bb</option>
+                    <option value="11">B</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Tempo: <span class="tempo-display" id="tempoDisplay">60</span> BPM</label>
+                <input type="range" id="tempoSlider" min="40" max="160" value="60" step="5">
+            </div>
+
+            <div class="control-group">
+                <label>Volume: <span id="volumeDisplay">70</span>%</label>
+                <input type="range" id="volumeSlider" min="0" max="100" value="70" step="5">
+            </div>
+            
+            <button id="playBtn">▶ Play</button>
+            <button id="stopBtn" disabled>⏹ Stop</button>
+        </div>
+        
+        <div class="triad-type-selector">
+            <button class="triad-type-btn major active" data-type="major">Major Triad (1-3-5)</button>
+            <button class="triad-type-btn minor" data-type="minor">Minor Triad (1-♭3-5)</button>
+        </div>
+        
+        <div class="shapes-container">
+            <div class="shapes-title">Triad Shapes (click to toggle) - Root position and inversions</div>
+            <div class="shapes-grid" id="shapesGrid">
+                <button class="shape-btn all-shapes active" id="allShapesBtn">All</button>
+            </div>
+        </div>
+        
+        <div class="current-info">
+            <div class="key-display" id="keyDisplay">C Major Triad</div>
+            <div class="triad-display" id="triadDisplay">C - E - G</div>
+            <div class="interval-display" id="intervalDisplay">Root (1) - Major 3rd (3) - Perfect 5th (5)</div>
+        </div>
+        
+        <div class="fretboard-wrapper">
+            <div class="fretboard" id="fretboard">
+                <div class="fret-numbers" id="fretNumbers"></div>
+                <div class="string" data-string="0">
+                    <div class="string-label">G</div>
+                    <div class="string-line" data-string="0"></div>
+                </div>
+                <div class="string" data-string="1">
+                    <div class="string-label">D</div>
+                    <div class="string-line" data-string="1"></div>
+                </div>
+                <div class="string" data-string="2">
+                    <div class="string-label">A</div>
+                    <div class="string-line" data-string="2"></div>
+                </div>
+                <div class="string" data-string="3">
+                    <div class="string-label">E</div>
+                    <div class="string-line" data-string="3"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="current-shape-display" id="currentShapeDisplay">
+            Current: <span id="currentShapeLabel">--</span>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-shape circle">R</div>
+                <span>Root (1) - Circle</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-shape square">3</div>
+                <span>3rd / ♭3rd - Square</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-shape triangle">5</div>
+                <span>5th - Triangle</span>
+            </div>
+        </div>
+        
+        <div class="shape-colors-legend" id="shapeColorsLegend">
+        </div>
+        
+        <div class="exercise-info" id="exerciseInfo">
+            Select shapes and press Play to start
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" id="prevKey">← Previous Key</button>
+            <button class="nav-btn" id="nextKey">Next Key →</button>
+        </div>
+    </div>
+
+    <script>
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        
+        const triads = {
+            major: [0, 4, 7],
+            minor: [0, 3, 7]
+        };
+        
+        const intervalNames = {
+            major: { 0: 'R', 4: '3', 7: '5' },
+            minor: { 0: 'R', 3: '♭3', 7: '5' }
+        };
+        
+        // Shape determines interval marker shape
+        const intervalShapes = {
+            0: 'circle',   // Root = Circle
+            3: 'square',   // Minor 3rd = Square
+            4: 'square',   // Major 3rd = Square
+            7: 'triangle'  // 5th = Triangle
+        };
+        
+        const shapeColors = {
+            1: '#ff6b6b',
+            2: '#ff9f43',
+            3: '#ffd93d',
+            4: '#6bcb77',
+            5: '#00d4ff',
+            6: '#9b59b6',
+            7: '#e056fd',
+            8: '#fd79a8',
+            9: '#74b9ff',
+            10: '#a29bfe'
+        };
+        
+        const openStrings = { 0: 7, 1: 2, 2: 9, 3: 4 };
+        const MAX_FRET = 24;
+        
+        function generateTriadShapes(rootNote, triadType) {
+            const intervals = triads[triadType];
+            const shapes = {};
+            let shapeNum = 1;
+            
+            const notePositions = { root: [], third: [], fifth: [] };
+            
+            for (let string = 0; string <= 3; string++) {
+                for (let fret = 0; fret <= MAX_FRET; fret++) {
+                    const noteValue = (openStrings[string] + fret) % 12;
+                    const interval = (noteValue - rootNote + 12) % 12;
+                    
+                    if (interval === intervals[0]) {
+                        notePositions.root.push({ string, fret, noteValue, interval: 0, intervalName: 'R' });
+                    } else if (interval === intervals[1]) {
+                        notePositions.third.push({ string, fret, noteValue, interval: intervals[1], intervalName: triadType === 'major' ? '3' : '♭3' });
+                    } else if (interval === intervals[2]) {
+                        notePositions.fifth.push({ string, fret, noteValue, interval: intervals[2], intervalName: '5' });
+                    }
+                }
+            }
+            
+            const usedPositions = new Set();
+            
+            notePositions.root.forEach(root => {
+                const nearbyThirds = notePositions.third.filter(t => 
+                    Math.abs(t.fret - root.fret) <= 5 && 
+                    t.string !== root.string &&
+                    Math.abs(t.string - root.string) <= 2
+                );
+                
+                nearbyThirds.forEach(third => {
+                    const nearbyFifths = notePositions.fifth.filter(f =>
+                        Math.abs(f.fret - root.fret) <= 5 &&
+                        Math.abs(f.fret - third.fret) <= 5 &&
+                        f.string !== root.string &&
+                        f.string !== third.string &&
+                        Math.abs(f.string - root.string) <= 2 &&
+                        Math.abs(f.string - third.string) <= 2
+                    );
+                    
+                    nearbyFifths.forEach(fifth => {
+                        const notes = [root, third, fifth].sort((a, b) => {
+                            if (a.string !== b.string) return b.string - a.string;
+                            return a.fret - b.fret;
+                        });
+                        
+                        const shapeKey = notes.map(n => `${n.string}-${n.fret}`).join('|');
+                        
+                        if (!usedPositions.has(shapeKey) && shapeNum <= 10) {
+                            usedPositions.add(shapeKey);
+                            
+                            const lowestNote = notes[0];
+                            let inversion = 'Root Position';
+                            let inversionShort = 'Root';
+                            
+                            if (lowestNote.interval === intervals[1]) {
+                                inversion = '1st Inversion';
+                                inversionShort = '1st Inv';
+                            } else if (lowestNote.interval === intervals[2]) {
+                                inversion = '2nd Inversion';
+                                inversionShort = '2nd Inv';
+                            }
+                            
+                            const minFret = Math.min(...notes.map(n => n.fret));
+                            const maxFret = Math.max(...notes.map(n => n.fret));
+                            
+                            shapes[shapeNum] = {
+                                notes: notes.map(n => ({
+                                    ...n,
+                                    noteName: noteNames[n.noteValue]
+                                })),
+                                startFret: minFret,
+                                endFret: maxFret,
+                                inversion: inversion,
+                                inversionShort: inversionShort,
+                                rootString: root.string
+                            };
+                            
+                            shapeNum++;
+                        }
+                    });
+                });
+            });
+            
+            const sortedShapes = {};
+            const sortedKeys = Object.keys(shapes).sort((a, b) => 
+                shapes[a].startFret - shapes[b].startFret
+            );
+            
+            sortedKeys.forEach((key, index) => {
+                sortedShapes[index + 1] = shapes[key];
+            });
+            
+            return sortedShapes;
+        }
+        
+        // Audio
+        let audioContext;
+        let masterGain;
+        
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioContext.createGain();
+                masterGain.connect(audioContext.destination);
+                masterGain.gain.value = 0.7;
+            }
+        }
+
+        const stringOpenFrequencies = { 0: 196.00, 1: 146.83, 2: 110.00, 3: 82.41 };
+
+        function playBassNote(string, fret, duration = 0.3) {
+            initAudio();
+            const now = audioContext.currentTime;
+            const freq = stringOpenFrequencies[string] * Math.pow(2, fret / 12);
+            
+            const osc1 = audioContext.createOscillator();
+            const osc2 = audioContext.createOscillator();
+            const osc3 = audioContext.createOscillator();
+            
+            osc1.type = 'sawtooth';
+            osc2.type = 'sine';
+            osc3.type = 'triangle';
+            
+            osc1.frequency.value = freq;
+            osc2.frequency.value = freq;
+            osc3.frequency.value = freq * 2;
+            
+            const gain1 = audioContext.createGain();
+            const gain2 = audioContext.createGain();
+            const gain3 = audioContext.createGain();
+            
+            gain1.gain.value = 0.3;
+            gain2.gain.value = 0.5;
+            gain3.gain.value = 0.15;
+            
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 800 + (fret * 30);
+            
+            const envelope = audioContext.createGain();
+            envelope.gain.setValueAtTime(0, now);
+            envelope.gain.linearRampToValueAtTime(1, now + 0.01);
+            envelope.gain.exponentialRampToValueAtTime(0.6, now + 0.08);
+            envelope.gain.linearRampToValueAtTime(0.4, now + duration - 0.05);
+            envelope.gain.linearRampToValueAtTime(0, now + duration);
+            
+            osc1.connect(gain1);
+            osc2.connect(gain2);
+            osc3.connect(gain3);
+            gain1.connect(filter);
+            gain2.connect(filter);
+            gain3.connect(filter);
+            filter.connect(envelope);
+            envelope.connect(masterGain);
+            
+            osc1.start(now);
+            osc2.start(now);
+            osc3.start(now);
+            osc1.stop(now + duration);
+            osc2.stop(now + duration);
+            osc3.stop(now + duration);
+        }
+
+        // State
+        let currentKey = 0;
+        let currentTriadType = 'major';
+        let activeShapes = new Set();
+        let isPlaying = false;
+        let currentNoteIndex = 0;
+        let intervalId = null;
+        let tempo = 60;
+        let currentShapes = {};
+        let totalShapes = 0;
+        
+        // DOM
+        const keySelect = document.getElementById('keySelect');
+        const tempoSlider = document.getElementById('tempoSlider');
+        const tempoDisplay = document.getElementById('tempoDisplay');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeDisplay = document.getElementById('volumeDisplay');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const exerciseInfo = document.getElementById('exerciseInfo');
+        const keyDisplay = document.getElementById('keyDisplay');
+        const triadDisplay = document.getElementById('triadDisplay');
+        const intervalDisplay = document.getElementById('intervalDisplay');
+        const fretNumbers = document.getElementById('fretNumbers');
+        const shapesGrid = document.getElementById('shapesGrid');
+        const allShapesBtn = document.getElementById('allShapesBtn');
+        const prevKeyBtn = document.getElementById('prevKey');
+        const nextKeyBtn = document.getElementById('nextKey');
+        const currentShapeLabel = document.getElementById('currentShapeLabel');
+        const shapeColorsLegend = document.getElementById('shapeColorsLegend');
+        
+        function initFretboard() {
+            for (let fret = 0; fret <= MAX_FRET; fret++) {
+                const numDiv = document.createElement('div');
+                numDiv.className = 'fret-num';
+                numDiv.textContent = fret;
+                numDiv.id = `fret-num-${fret}`;
+                fretNumbers.appendChild(numDiv);
+            }
+            
+            const strings = document.querySelectorAll('.string-line');
+            strings.forEach((stringLine, stringIndex) => {
+                for (let fret = 0; fret <= MAX_FRET; fret++) {
+                    const fretDiv = document.createElement('div');
+                    fretDiv.className = 'fret';
+                    fretDiv.style.left = `${fret * 42}px`;
+                    fretDiv.dataset.string = stringIndex;
+                    fretDiv.dataset.fret = fret;
+                    
+                    const marker = document.createElement('div');
+                    marker.className = 'fret-marker circle';
+                    
+                    const fretNumber = document.createElement('span');
+                    fretNumber.className = 'fret-number';
+                    
+                    const intervalLabel = document.createElement('span');
+                    intervalLabel.className = 'interval-label';
+                    
+                    marker.appendChild(fretNumber);
+                    marker.appendChild(intervalLabel);
+                    fretDiv.appendChild(marker);
+                    stringLine.appendChild(fretDiv);
+                    
+                    fretDiv.addEventListener('click', () => {
+                        playBassNote(stringIndex, fret, 0.4);
+                        highlightNote(stringIndex, fret);
+                    });
+                }
+            });
+        }
+        
+        function highlightNote(string, fret) {
+            document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
+            const fretEl = document.querySelector(`.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`);
+            if (fretEl) fretEl.classList.add('active');
+        }
+        
+        function updateShapeButtons() {
+            const existingBtns = shapesGrid.querySelectorAll('.shape-btn[data-shape]');
+            existingBtns.forEach(btn => btn.remove());
+            
+            totalShapes = Object.keys(currentShapes).length;
+            
+            for (let shape = 1; shape <= totalShapes; shape++) {
+                const btn = document.createElement('button');
+                btn.className = `shape-btn shape${shape} active`;
+                btn.dataset.shape = shape;
+                
+                const shapeData = currentShapes[shape];
+                btn.innerHTML = `Shape ${shape}<br><small>${shapeData.inversionShort} (f${shapeData.startFret}-${shapeData.endFret})</small>`;
+                
+                btn.addEventListener('click', () => toggleShape(shape, btn));
+                shapesGrid.appendChild(btn);
+            }
+            
+            activeShapes = new Set();
+            for (let i = 1; i <= totalShapes; i++) {
+                activeShapes.add(i);
+            }
+            
+            allShapesBtn.classList.add('active');
+            
+            // Update shape colors legend
+            updateShapeColorsLegend();
+        }
+        
+        function updateShapeColorsLegend() {
+            shapeColorsLegend.innerHTML = '';
+            
+            for (let shape = 1; shape <= totalShapes; shape++) {
+                const item = document.createElement('div');
+                item.className = 'shape-color-item';
+                item.innerHTML = `
+                    <div class="shape-color-dot" style="background: ${shapeColors[shape]}"></div>
+                    <span>Shape ${shape}</span>
+                `;
+                shapeColorsLegend.appendChild(item);
+            }
+        }
+        
+        function toggleShape(shape, btn) {
+            if (activeShapes.has(shape)) {
+                activeShapes.delete(shape);
+                btn.classList.remove('active');
+            } else {
+                activeShapes.add(shape);
+                btn.classList.add('active');
+            }
+            
+            allShapesBtn.classList.toggle('active', activeShapes.size === totalShapes);
+            updateFretboard();
+            
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+        }
+        
+        function updateDisplay() {
+            const rootName = noteNames[currentKey];
+            const triadTypeName = currentTriadType === 'major' ? 'Major' : 'Minor';
+            keyDisplay.textContent = `${rootName} ${triadTypeName} Triad`;
+            keyDisplay.style.color = currentTriadType === 'major' ? '#ff6b6b' : '#6bcb77';
+            
+            const intervals = triads[currentTriadType];
+            const triadNotes = intervals.map(interval => noteNames[(currentKey + interval) % 12]);
+            triadDisplay.textContent = triadNotes.join(' - ');
+            
+            if (currentTriadType === 'major') {
+                intervalDisplay.textContent = 'Root (1) - Major 3rd (3) - Perfect 5th (5)';
+            } else {
+                intervalDisplay.textContent = 'Root (1) - Minor 3rd (♭3) - Perfect 5th (5)';
+            }
+            
+            currentShapes = generateTriadShapes(currentKey, currentTriadType);
+            
+            updateShapeButtons();
+            updateFretboard();
+        }
+        
+        function updateFretboard() {
+            document.querySelectorAll('.fret').forEach(fret => {
+                fret.classList.remove('in-triad', 'active', 'root');
+                const marker = fret.querySelector('.fret-marker');
+                marker.className = 'fret-marker circle';
+                marker.style.background = 'rgba(255, 255, 255, 0.03)';
+                marker.style.borderColor = 'transparent';
+                marker.style.color = '#444';
+                marker.querySelector('.fret-number').textContent = '';
+                marker.querySelector('.interval-label').textContent = '';
+            });
+            
+            document.querySelectorAll('.fret-num').forEach(fn => fn.classList.remove('has-note'));
+            
+            const fretMap = {};
+            
+            activeShapes.forEach(shape => {
+                if (!currentShapes[shape]) return;
+                
+                currentShapes[shape].notes.forEach(note => {
+                    const key = `${note.string}-${note.fret}`;
+                    if (!fretMap[key]) {
+                        fretMap[key] = { shapes: [], note: note };
+                    }
+                    if (!fretMap[key].shapes.includes(shape)) {
+                        fretMap[key].shapes.push(shape);
+                    }
+                });
+            });
+            
+            const fretsWithNotes = new Set();
+            
+            Object.entries(fretMap).forEach(([key, data]) => {
+                const [string, fret] = key.split('-').map(Number);
+                const fretEl = document.querySelector(`.string-line[data-string="${string}"] .fret:nth-child(${fret + 1})`);
+                
+                fretsWithNotes.add(fret);
+                
+                if (fretEl) {
+                    fretEl.classList.add('in-triad');
+                    if (data.note.interval === 0) fretEl.classList.add('root');
+                    
+                    const marker = fretEl.querySelector('.fret-marker');
+                    const fretNumberEl = marker.querySelector('.fret-number');
+                    const intervalLabelEl = marker.querySelector('.interval-label');
+                    
+                    // Set shape based on interval
+                    const shapeType = intervalShapes[data.note.interval];
+                    marker.className = `fret-marker ${shapeType}`;
+                    
+                    // Color based on shape (position), not interval
+                    if (data.shapes.length === 1) {
+                        const shapeColor = shapeColors[data.shapes[0]];
+                        marker.style.background = shapeColor;
+                        marker.style.borderColor = shapeColor;
+                    } else {
+                        // Multi-shape - create gradient
+                        const colors = data.shapes.map(s => shapeColors[s]);
+                        const segments = colors.length;
+                        const angle = 360 / segments;
+                        let gradient = 'conic-gradient(';
+                        colors.forEach((color, i) => {
+                            gradient += `${color} ${i * angle}deg ${(i + 1) * angle}deg`;
+                            if (i < colors.length - 1) gradient += ', ';
+                        });
+                        gradient += ')';
+                        marker.style.background = gradient;
+                        marker.style.borderColor = '#fff';
+                    }
+                    
+                    marker.style.color = '#fff';
+                    fretNumberEl.textContent = fret;
+                    intervalLabelEl.textContent = data.note.intervalName;
+                }
+            });
+            
+            fretsWithNotes.forEach(fret => {
+                const fretNumEl = document.getElementById(`fret-num-${fret}`);
+                if (fretNumEl) fretNumEl.classList.add('has-note');
+            });
+        }
+        
+        function buildExercise() {
+            const exercise = [];
+            
+            const sortedShapes = Array.from(activeShapes).sort((a, b) => {
+                return currentShapes[a].startFret - currentShapes[b].startFret;
+            });
+            
+            sortedShapes.forEach(shapeNum => {
+                const shapeData = currentShapes[shapeNum];
+                if (!shapeData || shapeData.notes.length === 0) return;
+                
+                // Sort notes by string (low to high = E to G) then by fret
+                const sortedNotes = [...shapeData.notes].sort((a, b) => {
+                    if (a.string !== b.string) return b.string - a.string;
+                    return a.fret - b.fret;
+                });
+                
+                // Ascending
+                sortedNotes.forEach(note => {
+                    exercise.push({
+                        ...note,
+                        shapeNum,
+                        direction: 'ascending',
+                        inversion: shapeData.inversion
+                    });
+                });
+                
+                // Descending
+                const descendingNotes = [...sortedNotes].reverse();
+                descendingNotes.forEach(note => {
+                    exercise.push({
+                        ...note,
+                        shapeNum,
+                        direction: 'descending',
+                        inversion: shapeData.inversion
+                    });
+                });
+            });
+            
+            return exercise;
+        }
+        
+        function playNoteWithHighlight(note, noteDuration) {
+            document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
+            
+            const fretEl = document.querySelector(`.string-line[data-string="${note.string}"] .fret:nth-child(${note.fret + 1})`);
+            if (fretEl) fretEl.classList.add('active');
+            
+            playBassNote(note.string, note.fret, noteDuration);
+            
+            const stringNames = ['G', 'D', 'A', 'E'];
+            const directionText = note.direction === 'ascending' ? '↑ Ascending' : '↓ Descending';
+            const shapeColor = shapeColors[note.shapeNum];
+            
+            currentShapeLabel.innerHTML = `<span style="color: ${shapeColor}">Shape ${note.shapeNum}</span> - ${note.inversion}`;
+            
+            const shapeType = intervalShapes[note.interval];
+            const shapeSymbol = shapeType === 'circle' ? '●' : (shapeType === 'square' ? '■' : '▲');
+            
+            exerciseInfo.innerHTML = `
+                <span style="color: ${shapeColor}; font-weight: bold;">
+                    Shape ${note.shapeNum}
+                </span> | 
+                Note: <strong>${note.noteName}</strong> |
+                <span style="font-size: 16px;">${shapeSymbol}</span> ${note.intervalName} |
+                String <strong>${stringNames[note.string]}</strong> | 
+                Fret <strong>${note.fret}</strong> |
+                ${directionText}
+            `;
+        }
+        
+        function startPlayback() {
+            if (activeShapes.size === 0) {
+                exerciseInfo.textContent = 'Please select at least one shape!';
+                return;
+            }
+            
+            initAudio();
+            isPlaying = true;
+            currentNoteIndex = 0;
+            playBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            const exercise = buildExercise();
+            
+            if (exercise.length === 0) {
+                exerciseInfo.textContent = 'No notes to play!';
+                stopPlayback();
+                return;
+            }
+            
+            const noteInterval = (60 / tempo) * 1000;
+            const noteDuration = noteInterval / 1000 * 0.85;
+            
+            intervalId = setInterval(() => {
+                if (currentNoteIndex >= exercise.length) {
+                    currentNoteIndex = 0;
+                }
+                
+                playNoteWithHighlight(exercise[currentNoteIndex], noteDuration);
+                currentNoteIndex++;
+            }, noteInterval);
+        }
+        
+        function stopPlayback() {
+            isPlaying = false;
+            playBtn.disabled = false;
+            stopBtn.disabled = true;
+            clearInterval(intervalId);
+            document.querySelectorAll('.fret').forEach(f => f.classList.remove('active'));
+            exerciseInfo.textContent = 'Stopped';
+            currentShapeLabel.textContent = '--';
+        }
+        
+        // Event listeners
+        keySelect.addEventListener('change', (e) => {
+            currentKey = parseInt(e.target.value);
+            updateDisplay();
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+        });
+        
+        document.querySelectorAll('.triad-type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.triad-type-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTriadType = btn.dataset.type;
+                updateDisplay();
+                if (isPlaying) {
+                    stopPlayback();
+                    startPlayback();
+                }
+            });
+        });
+        
+        allShapesBtn.addEventListener('click', () => {
+            if (activeShapes.size === totalShapes) {
+                activeShapes.clear();
+                document.querySelectorAll('.shape-btn[data-shape]').forEach(b => b.classList.remove('active'));
+                allShapesBtn.classList.remove('active');
+            } else {
+                activeShapes = new Set();
+                for (let i = 1; i <= totalShapes; i++) {
+                    activeShapes.add(i);
+                }
+                document.querySelectorAll('.shape-btn[data-shape]').forEach(b => b.classList.add('active'));
+                allShapesBtn.classList.add('active');
+            }
+            updateFretboard();
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+        });
+        
+        tempoSlider.addEventListener('input', (e) => {
+            tempo = parseInt(e.target.value);
+            tempoDisplay.textContent = tempo;
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+        });
+        
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = parseInt(e.target.value);
+            volumeDisplay.textContent = volume;
+            if (masterGain) masterGain.gain.value = volume / 100;
+        });
+        
+        playBtn.addEventListener('click', startPlayback);
+        stopBtn.addEventListener('click', stopPlayback);
+        
+        prevKeyBtn.addEventListener('click', () => {
+            currentKey = (currentKey - 1 + 12) % 12;
+            keySelect.value = currentKey;
+            updateDisplay();
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+        });
+        
+        nextKeyBtn.addEventListener('click', () => {
+            currentKey = (currentKey + 1) % 12;
+            keySelect.value = currentKey;
+            updateDisplay();
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+        });
+        
+        // Initialize
+        initFretboard();
+        updateDisplay();
+    </script>
+</body>
+</html>
