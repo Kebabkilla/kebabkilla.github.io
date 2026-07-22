@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Time Block Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #e94560, #f5af19);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .summary {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-card.golden {
+            border-color: #f5af19;
+            box-shadow: 0 0 20px rgba(245, 175, 25, 0.2);
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .summary-value.green {
+            color: #4ade80;
+        }
+
+        .summary-value.red {
+            color: #f87171;
+        }
+
+        .summary-value.golden {
+            color: #f5af19;
+        }
+
+        .summary-subtext {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-color.grey {
+            background: #3a3a4a;
+        }
+
+        .legend-color.red {
+            background: #e94560;
+        }
+
+        .legend-color.green {
+            background: #4ade80;
+        }
+
+        .legend-color.golden {
+            background: #4ade80;
+            border: 2px solid #f5af19;
+            box-shadow: 0 0 8px rgba(245, 175, 25, 0.5);
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .hour-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .hour-row.golden {
+            background: linear-gradient(135deg, rgba(245, 175, 25, 0.1) 0%, rgba(233, 69, 96, 0.1) 100%);
+            border: 2px solid #f5af19;
+            box-shadow: 0 0 15px rgba(245, 175, 25, 0.3);
+        }
+
+        .hour-label {
+            min-width: 70px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #ccc;
+        }
+
+        .blocks {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .block {
+            flex: 1;
+            height: 50px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: transparent;
+        }
+
+        .block.grey {
+            background: #3a3a4a;
+            border: 2px solid #4a4a5a;
+        }
+
+        .block.grey:hover {
+            background: #4a4a5a;
+            transform: scale(1.02);
+        }
+
+        .block.red {
+            background: #e94560;
+            border: 2px solid #ff6b6b;
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.4);
+        }
+
+        .block.red:hover {
+            background: #ff6b6b;
+            transform: scale(1.02);
+        }
+
+        .block.green {
+            background: #4ade80;
+            border: 2px solid #86efac;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+        }
+
+        .block.green:hover {
+            background: #86efac;
+            transform: scale(1.02);
+        }
+
+        .hour-row.golden .block {
+            border-color: #f5af19;
+            box-shadow: 0 0 8px rgba(245, 175, 25, 0.5);
+        }
+
+        .hour-row.golden .block.green {
+            background: linear-gradient(135deg, #4ade80 0%, #86efac 100%);
+        }
+
+        .block:active {
+            transform: scale(0.95);
+        }
+
+        .hour-status {
+            min-width: 80px;
+            text-align: right;
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .hour-row.golden .hour-status {
+            color: #f5af19;
+            font-weight: 600;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .block.just-clicked {
+            animation: pulse 0.3s ease;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+
+            .blocks {
+                gap: 0.25rem;
+            }
+
+            .block {
+                height: 40px;
+            }
+
+            .hour-label {
+                min-width: 50px;
+                font-size: 0.85rem;
+            }
+
+            .hour-status {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Daily Time Tracker</h1>
+        <p class="subtitle">Click blocks to cycle: Grey → Red → Green → Grey</p>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color grey"></div>
+                <span>Inactive</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color red"></div>
+                <span>Active (Working)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color green"></div>
+                <span>Completed</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color golden"></div>
+                <span>Golden Hour</span>
+            </div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="summary-label">Completion Rate</div>
+                <div class="summary-value green" id="completion-rate">0%</div>
+                <div class="summary-subtext">Green / (Green + Red)</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Active Blocks</div>
+                <div class="summary-value red" id="active-blocks">0</div>
+                <div class="summary-subtext">Red blocks</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Completed Blocks</div>
+                <div class="summary-value green" id="completed-blocks">0</div>
+                <div class="summary-subtext">Green blocks</div>
+            </div>
+            <div class="summary-card golden">
+                <div class="summary-label">Golden Hours</div>
+                <div class="summary-value golden" id="golden-hours">0</div>
+                <div class="summary-subtext">Full productive hours</div>
+            </div>
+        </div>
+
+        <div class="timeline" id="timeline"></div>
+    </div>
+
+    <script>
+        // State management
+        const hours = [];
+        
+        // Initialize 24 hours with 4 blocks each
+        for (let i = 0; i < 24; i++) {
+            hours.push({
+                hour: i,
+                blocks: [0, 0, 0, 0] // 0 = grey, 1 = red, 2 = green
+            });
+        }
+
+        // Format hour label
+        function formatHour(hour) {
+            if (hour === 0) return '12 AM';
+            if (hour === 12) return '12 PM';
+            if (hour < 12) return `${hour} AM`;
+            return `${hour - 12} PM`;
+        }
+
+        // Get block label
+        function getBlockLabel(blockIndex) {
+            const minutes = blockIndex * 15;
+            return `${minutes.toString().padStart(2, '0')}`;
+        }
+
+        // Get block class based on state
+        function getBlockClass(state) {
+            switch(state) {
+                case 0: return 'grey';
+                case 1: return 'red';
+                case 2: return 'green';
+                default: return 'grey';
+            }
+        }
+
+        // Check if hour is golden (all 4 blocks green)
+        function isHourGolden(hour) {
+            return hour.blocks.every(b => b === 2);
+        }
+
+        // Count blocks by state
+        function countBlocks() {
+            let green = 0;
+            let red = 0;
+            let golden = 0;
+
+            hours.forEach(hour => {
+                if (isHourGolden(hour)) {
+                    golden++;
+                }
+                hour.blocks.forEach(block => {
+                    if (block === 2) green++;
+                    if (block === 1) red++;
+                });
+            });
+
+            return { green, red, golden };
+        }
+
+        // Handle block click
+        function handleBlockClick(hourIndex, blockIndex) {
+            const hour = hours[hourIndex];
+            const currentState = hour.blocks[blockIndex];
+            
+            // Cycle: grey(0) → red(1) → green(2) → grey(0)
+            hour.blocks[blockIndex] = (currentState + 1) % 3;
+
+            render();
+        }
+
+        // Render the timeline
+        function render() {
+            const timeline = document.getElementById('timeline');
+            const counts = countBlocks();
+
+            // Calculate completion rate
+            const totalActive = counts.green + counts.red;
+            const completionRate = totalActive > 0 
+                ? Math.round((counts.green / totalActive) * 100) 
+                : 0;
+
+            // Update summary
+            document.getElementById('completion-rate').textContent = `${completionRate}%`;
+            document.getElementById('active-blocks').textContent = counts.red;
+            document.getElementById('completed-blocks').textContent = counts.green;
+            document.getElementById('golden-hours').textContent = counts.golden;
+
+            // Render hours
+            timeline.innerHTML = hours.map((hour, hourIndex) => {
+                const isGolden = isHourGolden(hour);
+                const blockLabels = ['00', '15', '30', '45'];
+
+                return `
+                    <div class="hour-row ${isGolden ? 'golden' : ''}">
+                        <div class="hour-label">${formatHour(hour.hour)}</div>
+                        <div class="blocks">
+                            ${hour.blocks.map((state, blockIndex) => `
+                                <div 
+                                    class="block ${getBlockClass(state)}"
+                                    onclick="handleBlockClick(${hourIndex}, ${blockIndex})"
+                                    title="${blockLabels[blockIndex]} min"
+                                >
+                                    ${blockLabels[blockIndex]}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="hour-status">
+                            ${isGolden ? '⭐ Golden Hour' : `${hour.blocks.filter(b => b === 2).length}/4 completed`}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add animation class to clicked block
+            document.querySelectorAll('.block').forEach(block => {
+                block.addEventListener('click', function() {
+                    this.classList.add('just-clicked');
+                    setTimeout(() => this.classList.remove('just-clicked'), 300);
+                });
+            });
+        }
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
