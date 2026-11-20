@@ -148,15 +148,18 @@ select,input{font-family:inherit}
 .fb-fret-nums{display:grid;min-width:640px}
 .fb-fret-nums span{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:700}
 .piano{display:flex;min-width:560px;height:130px;border:1px solid #333;border-radius:6px;overflow:hidden;background:#111}
-.key{position:relative;flex:1;border-right:1px solid #333;background:#fff;cursor:pointer;padding:0;transition:background .08s,box-shadow .08s}
-.key.black{background:#111;flex:.62;margin:0 -4px;z-index:2;height:62%;border-radius:0 0 4px 4px}
-.key.on{background:var(--accent) !important;box-shadow:inset 0 0 0 3px #fff,0 0 14px rgba(255,140,26,.9);z-index:3}
-.key.root{background:#ff8c1a !important;box-shadow:inset 0 0 0 2px #fff}
-.key.tone{background:#60a5fa !important}
-.key span{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:#666}
-.key.black span{color:#aaa;bottom:3px}
-.key.on span,.key.root span{color:#111;font-size:12px}
-.key.on span{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.key{position:relative;flex:1;border-right:1px solid #333;background:#fff;cursor:pointer;padding:0;transition:background .07s,box-shadow .07s,transform .07s}
+.key.black{background:#141414;flex:.62;margin:0 -4px;z-index:2;height:62%;border-radius:0 0 4px 4px}
+.key.tone{background:linear-gradient(180deg,#60a5fa,#2563eb) !important;box-shadow:inset 0 -4px 0 #1d4ed8,inset 0 0 0 1px rgba(255,255,255,.5)}
+.key.black.tone{background:linear-gradient(180deg,#3b82f6,#1d4ed8) !important;box-shadow:inset 0 0 0 2px #bfdbfe,0 3px 10px rgba(37,99,235,.6)}
+.key.root{background:linear-gradient(180deg,#ff9f38,#ea580c) !important;box-shadow:inset 0 -4px 0 #9a3412,inset 0 0 0 2px #fff}
+.key.black.root{background:linear-gradient(180deg,#fb923c,#c2410c) !important;box-shadow:inset 0 0 0 2px #fde68a,0 3px 10px rgba(234,88,12,.7)}
+.key.on{background:linear-gradient(180deg,#fef08a 0%,#facc15 45%,#f97316 100%) !important;box-shadow:inset 0 0 0 3px #fff,0 0 18px 3px rgba(250,204,21,.9),0 0 24px rgba(249,115,22,.85) !important;transform:translateY(2px);z-index:4}
+.key.black.on{z-index:5}
+.key span{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:#555;white-space:nowrap}
+.key.black span{color:#aaa;bottom:4px;font-size:9.5px}
+.key.tone span,.key.root span{color:#fff !important;font-size:11.5px;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.key.on span{background:#111;color:#fff !important;padding:1px 5px;border-radius:4px;font-size:11px;text-shadow:none}
 .screennav{display:flex;gap:6px;margin-left:10px}
 .screennav button{border:1px solid #3a3a3a;background:#1f1f1f;color:#d1d5db;border-radius:8px;padding:7px 14px;font-size:13.5px;font-weight:700}
 .screennav button.on{background:var(--accent);color:#111;border-color:var(--accent)}
@@ -411,9 +414,9 @@ footer a:hover{color:var(--accent)}
             <button class="track-toggle on" data-track="melody" type="button">🎵 Melody</button>
             <button class="track-toggle on" data-track="drums" type="button">🥁 Drums</button>
           </div>
-          <div class="track-row"><span class="dot"></span><div><b>Bass</b><small>Main tab track</small></div><input type="range" id="bassVol" min="0" max="100" value="85" aria-label="Bass volume"></div>
-          <div class="track-row"><span class="dot" style="background:#3b82f6"></span><div><b>Piano guide</b><small>Root, octave up (toggle above)</small></div><input type="range" id="guideVol" min="0" max="100" value="45" aria-label="Guide volume"></div>
-          <div class="track-row"><span class="dot" style="background:#f59e0b"></span><div><b>🥁 Drums</b><small>Swing kit (play-alongs)</small></div><input type="range" id="drumVol" min="0" max="100" value="70" aria-label="Drums volume"></div>
+          <div class="track-row"><span class="dot"></span><div><b>🎸 Bass</b><small>Main tab track</small></div><input type="range" id="bassVol" min="0" max="100" value="85" aria-label="Bass volume"></div>
+          <div class="track-row"><span class="dot" style="background:#3b82f6"></span><div><b>🎹 Piano</b><small>Comping, melody &amp; guide</small></div><input type="range" id="guideVol" min="0" max="100" value="75" aria-label="Piano volume"></div>
+          <div class="track-row"><span class="dot" style="background:#f59e0b"></span><div><b>🥁 Drums</b><small>Swing / groove kit</small></div><input type="range" id="drumVol" min="0" max="100" value="70" aria-label="Drums volume"></div>
           <div class="track-row"><span class="dot" style="background:#9ca3af"></span><div><b>Metronome</b><small>Click track (toggle above)</small></div><input type="range" id="metroVol" min="0" max="100" value="60" aria-label="Metronome volume"></div>
         </div>
       </div>
@@ -677,99 +680,166 @@ let actx=null, master=null, bassGainNode=null, guideGainNode=null, metroGainNode
 function initAudio(){
   if(actx){ if(actx.state==="suspended") actx.resume(); return; }
   actx=new (window.AudioContext||window.webkitAudioContext)();
-  master=actx.createGain(); master.gain.value=0.8; master.connect(actx.destination);
-  bassGainNode=actx.createGain(); bassGainNode.gain.value=0.85; bassGainNode.connect(master);
-  guideGainNode=actx.createGain(); guideGainNode.gain.value=0.45; guideGainNode.connect(master);
-  metroGainNode=actx.createGain(); metroGainNode.gain.value=0.6; metroGainNode.connect(master);
-  drumGainNode=actx.createGain(); drumGainNode.gain.value=0.7; drumGainNode.connect(master);
+  master=actx.createGain(); master.gain.value=($("volRange")?+$("volRange").value:80)/100; master.connect(actx.destination);
+  bassGainNode=actx.createGain(); bassGainNode.gain.value=($("bassVol")?+$("bassVol").value:85)/100; bassGainNode.connect(master);
+  guideGainNode=actx.createGain(); guideGainNode.gain.value=($("guideVol")?+$("guideVol").value:75)/100; guideGainNode.connect(master);
+  metroGainNode=actx.createGain(); metroGainNode.gain.value=($("metroVol")?+$("metroVol").value:60)/100; metroGainNode.connect(master);
+  drumGainNode=actx.createGain(); drumGainNode.gain.value=($("drumVol")?+$("drumVol").value:70)/100; drumGainNode.connect(master);
   noiseBuffer=actx.createBuffer(1,actx.sampleRate*1,actx.sampleRate);
   const d=noiseBuffer.getChannelData(0);
   for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  /* Preload core mid-range Salamander anchors (C3..C6 = 13 small files) so all 12 keys per octave are ready */
+  preloadPiano([48,51,54,57,60,63,66,69,72,75,78,81,84]);
+}
+/* ---- Natural fingerstyle bass: sample-accurate zero-phase waveguide string + wood body ---- */
+const bassBuffers=new Map();
+function getBassBuffer(freq){
+  const key=Math.round(freq*10);
+  if(bassBuffers.has(key)) return bassBuffers.get(key);
+  const sr=actx.sampleRate;
+  const len=Math.floor(sr*2.4);
+  const buf=actx.createBuffer(1,len,sr);
+  const out=buf.getChannelData(0);
+  const P=sr/freq;
+  const ip=Math.max(6,Math.round(P));
+  const wave=new Float32Array(ip);
+  /* Finger-pluck displacement profile at 18% from bridge + soft wound-string texture */
+  const pluckIdx=Math.max(2,Math.floor(ip*0.18));
+  let seed=(key*2654435761)>>>0;
+  const rnd=()=>{ seed=(seed*1664525+1013904223)>>>0; return (seed/2147483648)-1; };
+  for(let i=0;i<ip;i++){
+    const tri=i<pluckIdx?(i/pluckIdx):((ip-i)/(ip-pluckIdx));
+    wave[i]=(tri*2-1)*0.78+rnd()*0.20;
+  }
+  /* Soft fleshy finger-pad smoothing */
+  for(let pass=0;pass<2;pass++){
+    const tmp=new Float32Array(ip);
+    for(let i=0;i<ip;i++) tmp[i]=0.25*wave[(i-1+ip)%ip]+0.5*wave[i]+0.25*wave[(i+1)%ip];
+    wave.set(tmp);
+  }
+  let mean=0; for(let i=0;i<ip;i++) mean+=wave[i]; mean/=ip;
+  for(let i=0;i<ip;i++) wave[i]-=mean;
+  const ringSize=ip+16;
+  const ring=new Float32Array(ringSize);
+  for(let i=0;i<ringSize;i++) ring[i]=wave[i%ip];
+  /* Symmetric 3-tap damping [a, 1-2a, a] has identically zero phase shift -> 0.0 cents pitch error */
+  const a=Math.min(0.20,Math.max(0.06,0.065+freq*0.00045));
+  const fb=Math.pow(0.003,1/(freq*2.3));
+  let wIdx=0;
+  const readFrac=delay=>{
+    let pos=wIdx-delay;
+    while(pos<0) pos+=ringSize;
+    const i0=Math.floor(pos), fr=pos-i0;
+    const s0=ring[i0%ringSize], s1=ring[(i0+1)%ringSize];
+    return s0+(s1-s0)*fr;
+  };
+  const twoPiF=2*Math.PI*freq/sr;
+  let peak=0.001;
+  for(let n=0;n<len;n++){
+    const y0=readFrac(P), ym=readFrac(P-1), yp=readFrac(P+1);
+    const next=((1-2*a)*y0+a*(ym+yp))*fb;
+    ring[wIdx]=next;
+    wIdx=(wIdx+1)%ringSize;
+    const t=n/sr;
+    const body=(Math.sin(twoPiF*n)*0.34+Math.sin(2*twoPiF*n)*0.11)*Math.exp(-t*1.8)*(1-Math.exp(-t*140));
+    const thump=Math.sin(2*Math.PI*(freq*2.2)*t)*0.14*Math.exp(-t*110);
+    const sample=next*0.86+body+thump;
+    out[n]=sample;
+    const ab=Math.abs(sample); if(ab>peak) peak=ab;
+  }
+  const norm=0.92/peak;
+  for(let n=0;n<len;n++) out[n]*=norm;
+  bassBuffers.set(key,buf);
+  return buf;
 }
 function bassNote(freq,when,dur,vol){
-  /* Natural plucked bass: Karplus-Strong string + pick attack + body sine */
   initAudio();
-  const d=Math.max(0.15,dur);
-  const out=actx.createGain(); out.gain.value=vol; out.connect(bassGainNode);
-  /* --- Karplus-Strong string --- */
-  const exc=actx.createBufferSource(); exc.buffer=noiseBuffer;
-  const delay=actx.createDelay(0.1); delay.delayTime.value=1/freq;
-  const damp=actx.createBiquadFilter(); damp.type="lowpass"; damp.frequency.value=Math.min(3500,freq*6); damp.Q.value=0.5;
-  const fb=actx.createGain(); fb.gain.value=0.996;
-  const strEnv=actx.createGain();
-  strEnv.gain.setValueAtTime(0,when);
-  strEnv.gain.linearRampToValueAtTime(0.9,when+0.004);
-  strEnv.gain.exponentialRampToValueAtTime(0.001,when+d);
-  exc.connect(delay); delay.connect(damp); damp.connect(fb); fb.connect(delay);
-  delay.connect(strEnv); strEnv.connect(out);
-  exc.start(when); exc.stop(when+0.03);
-  /* --- Body: fundamental sine with soft attack --- */
-  const body=actx.createOscillator(); body.type="sine"; body.frequency.value=freq;
-  const bodyG=actx.createGain();
-  bodyG.gain.setValueAtTime(0,when);
-  bodyG.gain.linearRampToValueAtTime(0.55,when+0.01);
-  bodyG.gain.exponentialRampToValueAtTime(0.001,when+Math.min(d,0.6));
-  body.connect(bodyG); bodyG.connect(out);
-  body.start(when); body.stop(when+d+0.05);
-  /* --- Pick attack: short highpassed noise --- */
-  const pick=actx.createBufferSource(); pick.buffer=noiseBuffer;
-  const hp=actx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1800;
-  const pickG=actx.createGain();
-  pickG.gain.setValueAtTime(0.35,when);
-  pickG.gain.exponentialRampToValueAtTime(0.001,when+0.03);
-  pick.connect(hp); hp.connect(pickG); pickG.connect(out);
-  pick.start(when); pick.stop(when+0.04);
+  const t0=Math.max(actx.currentTime,when);
+  const hold=Math.max(0.14,dur);
+  const rel=0.055;
+  const src=actx.createBufferSource();
+  src.buffer=getBassBuffer(freq);
+  const warmth=actx.createBiquadFilter();
+  warmth.type="lowshelf"; warmth.frequency.value=160; warmth.gain.value=3.2;
+  const env=actx.createGain();
+  env.gain.setValueAtTime(0.0001,t0);
+  env.gain.linearRampToValueAtTime(vol,t0+0.004);
+  env.gain.setValueAtTime(vol*0.92,t0+hold);
+  env.gain.exponentialRampToValueAtTime(0.0001,t0+hold+rel);
+  src.connect(warmth); warmth.connect(env); env.connect(bassGainNode);
+  src.start(t0); src.stop(t0+Math.min(2.38,hold+rel+0.03));
 }
-/* ---- Drum kit (swing) ---- */
+/* ---- Drum kit (jazz swing / groove) ---- */
 function drumKick(when,vol){
+  const t0=Math.max(actx.currentTime,when);
   const o=actx.createOscillator(),g=actx.createGain();
   o.type="sine";
-  o.frequency.setValueAtTime(150,when);
-  o.frequency.exponentialRampToValueAtTime(45,when+0.12);
-  g.gain.setValueAtTime(vol,when);
-  g.gain.exponentialRampToValueAtTime(0.001,when+0.25);
-  o.connect(g); g.connect(drumGainNode); o.start(when); o.stop(when+0.3);
+  o.frequency.setValueAtTime(135,t0);
+  o.frequency.exponentialRampToValueAtTime(48,t0+0.11);
+  g.gain.setValueAtTime(vol,t0);
+  g.gain.exponentialRampToValueAtTime(0.001,t0+0.24);
+  o.connect(g); g.connect(drumGainNode); o.start(t0); o.stop(t0+0.28);
 }
 function drumSnare(when,vol){
+  const t0=Math.max(actx.currentTime,when);
   const n=actx.createBufferSource(); n.buffer=noiseBuffer;
-  const hp=actx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1500;
+  const bp=actx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2200; bp.Q.value=0.9;
   const g=actx.createGain();
-  g.gain.setValueAtTime(vol,when);
-  g.gain.exponentialRampToValueAtTime(0.001,when+0.18);
-  n.connect(hp); hp.connect(g); g.connect(drumGainNode);
-  n.start(when); n.stop(when+0.2);
+  g.gain.setValueAtTime(vol*0.75,t0);
+  g.gain.exponentialRampToValueAtTime(0.001,t0+0.16);
+  n.connect(bp); bp.connect(g); g.connect(drumGainNode);
+  n.start(t0); n.stop(t0+0.19);
   const o=actx.createOscillator(),og=actx.createGain();
-  o.type="triangle"; o.frequency.value=190;
-  og.gain.setValueAtTime(vol*0.5,when);
-  og.gain.exponentialRampToValueAtTime(0.001,when+0.08);
-  o.connect(og); og.connect(drumGainNode); o.start(when); o.stop(when+0.1);
+  o.type="triangle"; o.frequency.setValueAtTime(210,t0); o.frequency.exponentialRampToValueAtTime(145,t0+0.06);
+  og.gain.setValueAtTime(vol*0.45,t0);
+  og.gain.exponentialRampToValueAtTime(0.001,t0+0.08);
+  o.connect(og); og.connect(drumGainNode); o.start(t0); o.stop(t0+0.1);
 }
 function drumHat(when,vol,open){
+  const t0=Math.max(actx.currentTime,when);
   const n=actx.createBufferSource(); n.buffer=noiseBuffer;
-  const hp=actx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=7000;
-  const g=actx.createGain(); const dur=open?0.25:0.05;
-  g.gain.setValueAtTime(vol,when);
-  g.gain.exponentialRampToValueAtTime(0.001,when+dur);
+  const hp=actx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=7200;
+  const g=actx.createGain(); const dur=open?0.22:0.055;
+  g.gain.setValueAtTime(vol,t0);
+  g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
   n.connect(hp); hp.connect(g); g.connect(drumGainNode);
-  n.start(when); n.stop(when+dur+0.02);
+  n.start(t0); n.stop(t0+dur+0.02);
 }
-/* ---- Natural piano: sampled Salamander Grand Piano (Tone.js audio) with synth fallback ---- */
-const pianoBuffers=new Map();   // midi -> AudioBuffer
-const pianoPromises=new Map();  // midi -> Promise (so every key uses the same sample)
+function drumRide(when,vol){
+  const t0=Math.max(actx.currentTime,when);
+  const n=actx.createBufferSource(); n.buffer=noiseBuffer;
+  const bp=actx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=4600; bp.Q.value=2.2;
+  const hp=actx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=3200;
+  const g=actx.createGain();
+  g.gain.setValueAtTime(vol*0.55,t0);
+  g.gain.exponentialRampToValueAtTime(0.001,t0+0.32);
+  n.connect(bp); bp.connect(hp); hp.connect(g); g.connect(drumGainNode);
+  n.start(t0); n.stop(t0+0.35);
+}
+/* ---- Natural piano: multi-sampled Salamander Grand Piano covering all 88 keys ----
+   Tone.js Salamander hosts samples every minor 3rd: A0(21), C1(24), Ds1(27), Fs1(30)... C8(108).
+   Every MIDI note snaps to its nearest anchor (±1 semitone max) and pitch-shifts via playbackRate,
+   so ALL 12 keys in every octave use the real sampled grand piano with consistent timbre. */
+const SALAMANDER_PC={0:"C",3:"Ds",6:"Fs",9:"A"};
+const pianoBuffers=new Map();   // anchorMidi -> AudioBuffer
+const pianoPromises=new Map();  // anchorMidi -> Promise<boolean>
 let pianoReady=false, pianoFailed=false;
-function midiToSampleName(m){
-  const names=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-  return names[((m%12)+12)%12]+(Math.floor(m/12)-1);
+function nearestPianoAnchor(m){
+  const clamped=Math.max(21,Math.min(108,Math.round(m)));
+  return 21+Math.round((clamped-21)/3)*3;
+}
+function anchorToSampleName(anchor){
+  return SALAMANDER_PC[anchor%12]+(Math.floor(anchor/12)-1);
 }
 function setPianoBadge(state,text){
   const b=$("pianoBadge"); if(!b) return;
   b.className="piano-badge "+state; $("pianoBadgeText").textContent=text;
 }
-function loadPianoNote(m){
-  if(pianoBuffers.has(m)) return Promise.resolve(true);
-  if(pianoPromises.has(m)) return pianoPromises.get(m);
+function loadPianoAnchor(anchor){
+  if(pianoBuffers.has(anchor)) return Promise.resolve(true);
+  if(pianoPromises.has(anchor)) return pianoPromises.get(anchor);
   if(!actx) return Promise.resolve(false);
-  const name=midiToSampleName(m);
+  const name=anchorToSampleName(anchor);
   const urls=[
     "https://cdn.jsdelivr.net/gh/Tonejs/audio@master/salamander/"+name+".mp3",
     "https://tonejs.github.io/audio/salamander/"+name+".mp3"
@@ -781,54 +851,78 @@ function loadPianoNote(m){
         if(!res.ok) continue;
         const buf=await res.arrayBuffer();
         const audio=await actx.decodeAudioData(buf);
-        pianoBuffers.set(m,audio);
+        pianoBuffers.set(anchor,audio);
         pianoReady=true; pianoFailed=false;
         setPianoBadge("ready","🎹 Piano: sampled grand (Salamander)");
         return true;
       }catch(e){ /* try next url */ }
     }
+    pianoPromises.delete(anchor);
     if(pianoBuffers.size===0&&!pianoReady){
       pianoFailed=true;
       setPianoBadge("","🎹 Piano: synth fallback (samples offline)");
     }
     return false;
   })();
-  pianoPromises.set(m,p);
+  pianoPromises.set(anchor,p);
   return p;
 }
 function preloadPiano(midis){
   initAudio();
-  const uniq=[...new Set(midis)];
-  const missing=uniq.filter(m=>!pianoBuffers.has(m));
-  if(missing.length) setPianoBadge("loading","🎹 Piano: loading sampled grand… ("+missing.length+" notes)");
-  return Promise.all(uniq.map(m=>loadPianoNote(m)));
+  const anchors=[...new Set(midis.map(m=>nearestPianoAnchor(m)))];
+  const missing=anchors.filter(a=>!pianoBuffers.has(a));
+  if(missing.length&&!pianoReady) setPianoBadge("loading","🎹 Piano: loading sampled grand…");
+  return Promise.all(anchors.map(a=>loadPianoAnchor(a))).then(res=>{
+    if(pianoBuffers.size>0) setPianoBadge("ready","🎹 Piano: sampled grand (Salamander)");
+    return res;
+  });
 }
 function pianoSynthNote(freq,when,dur,vol){
-  /* Improved piano-ish synth used only until samples arrive / if offline */
+  const t0=Math.max(actx.currentTime,when);
   const partials=[[1,0.55],[2,0.32],[3,0.16],[4,0.08],[5,0.04]];
   const out=actx.createGain(); out.gain.value=vol; out.connect(guideGainNode);
   const lp=actx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=Math.min(6000,1200+freq*4); lp.connect(out);
   partials.forEach(([mult,amp])=>{
     const o=actx.createOscillator(); o.type="sine"; o.frequency.value=freq*mult*(1+0.0004*mult*mult);
     const g=actx.createGain(); const d=Math.max(0.2,dur/(1+mult*0.35));
-    g.gain.setValueAtTime(0,when);
-    g.gain.linearRampToValueAtTime(amp,when+0.008);
-    g.gain.exponentialRampToValueAtTime(0.0008,when+d);
-    o.connect(g); g.connect(lp); o.start(when); o.stop(when+d+0.05);
+    g.gain.setValueAtTime(0,t0);
+    g.gain.linearRampToValueAtTime(amp,t0+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0008,t0+d);
+    o.connect(g); g.connect(lp); o.start(t0); o.stop(t0+d+0.05);
   });
+}
+function scheduleSampledPiano(buf,exactMidi,anchor,when,dur,vol){
+  const t0=Math.max(actx.currentTime,when);
+  const src=actx.createBufferSource();
+  src.buffer=buf;
+  src.playbackRate.value=Math.pow(2,(exactMidi-anchor)/12);
+  const hold=Math.max(0.24,dur);
+  const rel=0.38;
+  const g=actx.createGain();
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.linearRampToValueAtTime(vol*0.95,t0+0.004);
+  g.gain.setValueAtTime(vol*0.88,t0+hold);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+hold+rel);
+  const lp=actx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=9500;
+  src.connect(lp); lp.connect(g); g.connect(guideGainNode);
+  src.start(t0); src.stop(t0+hold+rel+0.05);
 }
 function pianoNote(freq,when,dur,vol){
   initAudio();
-  const midi=Math.round(69+12*Math.log2(freq/440));
-  const buf=pianoBuffers.get(midi);
+  const exactMidi=69+12*Math.log2(freq/440);
+  const anchor=nearestPianoAnchor(exactMidi);
+  const buf=pianoBuffers.get(anchor);
   if(buf){
-    const src=actx.createBufferSource(); src.buffer=buf;
-    const g=actx.createGain(); g.gain.value=vol*0.9;
-    const lp=actx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=8000;
-    src.connect(lp); lp.connect(g); g.connect(guideGainNode);
-    src.start(when); src.stop(when+Math.max(dur,0.4)+1.5);
+    scheduleSampledPiano(buf,exactMidi,anchor,when,dur,vol);
+  } else if(!pianoFailed && when<=actx.currentTime+0.12){
+    /* First interactive click before preload finishes: wait briefly for real sample so it never sounds funny */
+    loadPianoAnchor(anchor).then(ok=>{
+      const b2=pianoBuffers.get(anchor);
+      if(ok&&b2) scheduleSampledPiano(b2,exactMidi,anchor,actx.currentTime+0.01,dur,vol);
+      else pianoSynthNote(freq,actx.currentTime+0.01,dur,vol);
+    });
   } else {
-    loadPianoNote(midi);
+    loadPianoAnchor(anchor);
     pianoSynthNote(freq,when,dur,vol);
   }
 }
@@ -924,12 +1018,14 @@ function walkingBass(chords){
       const sf=midiToFret(m);
       if(sf) bass.push({s:sf.s,f:sf.f,b:b0+i,d:0.92});
     });
-    /* piano comping: chord tones on beats 2 and 4 (voiced around C4) */
-    const compOffs=[7,10,14].map(o=>o);
-    [1,3].forEach(beat=>{
+    /* piano comping: rootless jazz voicing (3rd, 5th, 7th from chord formula) around middle C */
+    const iv=CHORDS[ch.type].iv;
+    const compOffs=iv.length>=4?[iv[1],iv[2],iv[3]]:[iv[0],iv[1],iv[2]];
+    [1,3].forEach((beat,bi)=>{
       compOffs.forEach(o=>{
-        const m=48+(((ch.root+o)%12+12)%12)+12;
-        piano.push({midi:m,b:b0+beat,d:0.5});
+        let m=52+(((ch.root+o-52)%12+12)%12);
+        if(m<55) m+=12;
+        piano.push({midi:m,b:b0+beat,d:bi===0?0.85:0.65});
       });
     });
     chart.push({symbol:pcName(ch.root)+CHORDS[ch.type].name,b:b0});
@@ -993,9 +1089,15 @@ let isPlaying=false, loopOn=false, metroOn=false, countIn=false, guideOn=false;
 let loopStart=null, loopEnd=null, seekBeat=0;
 let startCtxTime=0, startBeat=0, schedTimer=null, rafId=null;
 let nextIdx=0, nextBeatTime=0, lastMetroBeat=-1, countInUntil=0;
-let nextPianoIdx=0, jazzTracks={bass:true,comp:true,melody:true,drums:true};
+let nextPianoIdx=0, jazzTracks={bass:true,comp:true,melody:true,drums:true}, soloDrumOn=false;
 let lastHatStep=-1;
 const BEATS_PER_BAR=4;
+function isDrumsActive(){ return (exData&&exData.piano)?jazzTracks.drums:soloDrumOn; }
+function toggleDrumsTrack(){
+  if(exData&&exData.piano) jazzTracks.drums=!jazzTracks.drums;
+  else soloDrumOn=!soloDrumOn;
+  syncTrackToggles();
+}
 
 function secPerBeat(){ return (60/tempo)/speed; }
 function currentBeat(){
@@ -1020,11 +1122,10 @@ function loadExercise(i){
   $("exerciseTheory").innerHTML=ex.theory;
   $("tempoVal").textContent=tempo;
   document.querySelectorAll(".ex-item").forEach((el,j)=>el.classList.toggle("on",j===i));
-  renderTab(); renderPlayerFretboard(); renderPlayerPiano(); renderPlayerNotes(); renderChordChart(); updateNow(null); updateProgress(0);
+  renderTab(); renderPlayerFretboard(); renderPlayerPiano(); renderPlayerNotes(); renderChordChart(); updateNow(null); updateProgress(0); syncTrackToggles();
   $("timeTot").textContent=fmtTime(exData.totalBeats*secPerBeat());
   if(exData.piano&&exData.piano.length){
     preloadPiano(exData.piano.map(p=>p.midi));
-    toast("🎹 Sampled piano loading — press Play");
   }
 }
 function renderChordChart(){
@@ -1133,12 +1234,27 @@ function highlightCurrent(b){
     el.classList.toggle("now",i===cur);
     el.classList.toggle("done",i<cur);
   });
-  if(cur>=0) updateNow(notes[cur]);
-  document.querySelectorAll("#playerFretboard .fb-cell").forEach(c=>{
-    const i=+c.dataset.i; c.classList.toggle("now",i===cur);
+  const curN=(cur>=0&&b>=0)?notes[cur]:null;
+  if(curN) updateNow(curN);
+  document.querySelectorAll("#playerFretboard .fb-cell[data-s]").forEach(c=>{
+    c.classList.toggle("now",!!curN&&+c.dataset.s===curN.s&&+c.dataset.f===curN.f);
   });
+  /* Active piano keys: highlight active piano comping/melody notes + current bass pitch class */
+  const activeMidis=new Set(), activePcs=new Set();
+  if(b>=0){
+    if(curN&&jazzTracks.bass) activePcs.add(((stringMidi(curN.s,curN.f)%12)+12)%12);
+    if(exData.piano){
+      for(const p of exData.piano){
+        const isMel=p.melody===true;
+        if(!((isMel&&jazzTracks.melody)||(!isMel&&jazzTracks.comp))) continue;
+        if(b>=p.b&&b<=p.b+Math.max(0.25,p.d)) activeMidis.add(p.midi);
+      }
+    }
+  }
   document.querySelectorAll("#playerPiano .key").forEach(k=>{
-    const i=+k.dataset.i; k.classList.toggle("on",i===cur);
+    const m=+k.dataset.midi, pc=+k.dataset.pc, oct=+k.dataset.oct;
+    const on=activeMidis.has(m)||(activeMidis.size===0&&oct===0&&activePcs.has(pc))||(oct===0&&activePcs.has(pc)&&!exData.piano);
+    k.classList.toggle("on",on);
   });
   highlightChord(b);
 }
@@ -1154,46 +1270,54 @@ function schedulerTick(){
       stopPlayback(); return;
     }
     while(nextIdx<exData.notes.length&&exData.notes[nextIdx].b<b-0.001) nextIdx++;
-    if(nextIdx<exData.notes.length){
+    while(nextIdx<exData.notes.length&&exData.notes[nextIdx].b<b+0.05){
       const n=exData.notes[nextIdx];
-      if(n.b>=b-0.001&&n.b<b+0.05){
-        const when=startCtxTime+(n.b-startBeat)*secPerBeat();
-        if(!exData.piano||jazzTracks.bass) bassNote(stringFreq(n.s,n.f),when,Math.max(0.15,n.d*secPerBeat()*0.9),0.9);
-        if(guideOn) pianoNote(midiFreq(stringMidi(n.s,n.f)+12),when,0.5,0.5);
-        nextIdx++;
-      }
+      const when=startCtxTime+(n.b-startBeat)*secPerBeat();
+      if(jazzTracks.bass) bassNote(stringFreq(n.s,n.f),when,Math.max(0.15,n.d*secPerBeat()*0.92),0.9);
+      if(guideOn) pianoNote(midiFreq(stringMidi(n.s,n.f)+12),when,0.5,0.5);
+      nextIdx++;
     }
     if(exData.piano){
       while(nextPianoIdx<exData.piano.length&&exData.piano[nextPianoIdx].b<b-0.001) nextPianoIdx++;
-      if(nextPianoIdx<exData.piano.length){
+      while(nextPianoIdx<exData.piano.length&&exData.piano[nextPianoIdx].b<b+0.05){
         const p=exData.piano[nextPianoIdx];
-        if(p.b>=b-0.001&&p.b<b+0.05){
-          const when=startCtxTime+(p.b-startBeat)*secPerBeat();
-          const isMelody=p.melody===true;
-          if((isMelody&&jazzTracks.melody)||(!isMelody&&jazzTracks.comp)){
-            pianoNote(midiFreq(p.midi),when,Math.max(0.3,p.d*secPerBeat()),isMelody?0.75:0.55);
-          }
-          nextPianoIdx++;
+        const when=startCtxTime+(p.b-startBeat)*secPerBeat();
+        const isMelody=p.melody===true;
+        if((isMelody&&jazzTracks.melody)||(!isMelody&&jazzTracks.comp)){
+          pianoNote(midiFreq(p.midi),when,Math.max(0.3,p.d*secPerBeat()),isMelody?0.74:0.45);
         }
+        nextPianoIdx++;
       }
     }
     if(metroOn){
       const beatInt=Math.floor(b);
       if(beatInt!==lastMetroBeat&&b>=beatInt){ click(nextBeatTime,beatInt%BEATS_PER_BAR===0); lastMetroBeat=beatInt; }
     }
-    /* Swing drums (play-alongs): kick 1&3, snare 2&4, hats on 8ths with swing */
-    if(exData.piano&&jazzTracks.drums){
+    /* Drum kit: bossa groove on Blue Bossa, jazz ride swing on jazz standards, steady groove on drills */
+    if(isDrumsActive()){
       const spb=secPerBeat();
       const hatStep=Math.floor(b*2);
       if(hatStep!==lastHatStep&&b>=hatStep/2){
-        const swing=(hatStep%2===1)?spb*0.12:0;
-        const when=nextBeatTime+swing;
-        const beatInBar=Math.floor(b)%4;
-        if(hatStep%2===0){
-          if(beatInBar===0||beatInBar===2) drumKick(when,0.9);
-          else drumSnare(when,0.7);
+        const exId=EXERCISES[exIndex]&&EXERCISES[exIndex].id;
+        const stepInBar=((hatStep%8)+8)%8;
+        const baseWhen=startCtxTime+(hatStep*0.5-startBeat)*spb;
+        if(exId==="bluebossa"){
+          /* Bossa nova: straight 8th hats, surdo kick on 1, 2+, 3, 4+, rim clave */
+          drumHat(baseWhen,stepInBar%2===0?0.34:0.24,false);
+          if(stepInBar===0||stepInBar===3||stepInBar===4||stepInBar===7) drumKick(baseWhen,stepInBar%4===0?0.75:0.5);
+          if(stepInBar===0||stepInBar===3||stepInBar===6) drumSnare(baseWhen,0.38);
+        } else {
+          /* Jazz swing: ride ding—ding-da, hi-hat chick on 2 & 4, feathered kick on 1 & 3, light snare comp */
+          const swing=(hatStep%2===1)?spb*0.14:0;
+          const when=baseWhen+swing;
+          if(stepInBar%2===0){
+            drumRide(when,0.75);
+            if(stepInBar===0||stepInBar===4) drumKick(when,0.68);
+            if(stepInBar===2||stepInBar===6){ drumHat(when,0.52,false); if(stepInBar===6) drumSnare(when,0.36); }
+          } else if(stepInBar===3||stepInBar===7){
+            drumRide(when,0.52);
+          }
         }
-        drumHat(when,hatStep%2===0?0.35:0.5,false);
         lastHatStep=hatStep;
       }
     }
@@ -1216,10 +1340,13 @@ function rafLoop(){
 let isStarting=false;
 async function startPlayback(){
   initAudio(); if(!exData||isStarting) return;
-  /* Wait for the sampled piano so every key sounds natural (no synth/sample mix) */
-  if(exData.piano&&exData.piano.length){
+  /* Preload all piano anchors needed for the song/guide before playback starts so every key is consistent */
+  const needMidis=[];
+  if(exData.piano&&exData.piano.length) exData.piano.forEach(p=>needMidis.push(p.midi));
+  if(guideOn&&exData.notes) exData.notes.forEach(n=>needMidis.push(stringMidi(n.s,n.f)+12));
+  if(needMidis.length){
     isStarting=true;
-    try{ await preloadPiano(exData.piano.map(p=>p.midi)); }catch(e){}
+    try{ await preloadPiano(needMidis); }catch(e){}
     isStarting=false;
     if(!exData) return;
   }
@@ -1261,17 +1388,28 @@ function renderPlayerFretboard(){
     c.addEventListener("click",()=>{ const s=+c.dataset.s,f=+c.dataset.f; initAudio(); bassNote(stringFreq(s,f),actx.currentTime,0.5,0.9); });
   });
 }
+function flashPianoEl(el,ms){
+  if(!el) return;
+  el.classList.add("on");
+  clearTimeout(el._ft);
+  el._ft=setTimeout(()=>el.classList.remove("on"),ms||420);
+}
 function renderPlayerPiano(){
   const wrap=$("playerPiano");
   const used=new Set(exData.notes.map(n=>((stringMidi(n.s,n.f)%12)+12)%12));
+  if(exData.piano) exData.piano.forEach(p=>used.add(((p.midi%12)+12)%12));
   let html=`<div class="piano">`;
   for(let oct=0;oct<2;oct++) for(let pc=0;pc<12;pc++){
     const black=[1,3,6,8,10].includes(pc);
-    const idx=exData.notes.findIndex(n=>((stringMidi(n.s,n.f)%12)+12)%12===pc);
-    html+=`<button class="key${black?" black":""}${used.has(pc)?" tone":""}" data-i="${idx}" data-pc="${pc}" type="button"><span>${pcName(pc)}</span></button>`;
+    const midi=48+oct*12+pc;
+    html+=`<button class="key${black?" black":""}${used.has(pc)?" tone":""}" data-oct="${oct}" data-midi="${midi}" data-pc="${pc}" type="button"><span>${pcName(pc)}</span></button>`;
   }
   html+="</div>"; wrap.innerHTML=html;
-  wrap.querySelectorAll(".key").forEach(k=>k.addEventListener("click",()=>{ initAudio(); pianoNote(midiFreq(48+(+k.dataset.pc)),actx.currentTime,0.6,0.7); }));
+  wrap.querySelectorAll(".key").forEach(k=>k.addEventListener("click",()=>{
+    initAudio();
+    pianoNote(midiFreq(+k.dataset.midi),actx.currentTime,0.65,0.75);
+    flashPianoEl(k,480);
+  }));
 }
 function renderPlayerNotes(){
   const rows=exData.notes.map((n,i)=>{
@@ -1311,13 +1449,17 @@ function pianoHTML(highlightPcs,rootPc){
   let html=`<div class="piano">`;
   for(let oct=0;oct<2;oct++) for(let pc=0;pc<12;pc++){
     const black=[1,3,6,8,10].includes(pc);
+    const midi=48+oct*12+pc;
     const cls=pc===rootPc?"root":(highlightPcs.has(pc)?"tone":"");
-    html+=`<button class="key${black?" black":""} ${cls}" data-pc="${pc}" type="button"><span>${pcName(pc)}</span></button>`;
+    html+=`<button class="key${black?" black":""} ${cls}" data-oct="${oct}" data-midi="${midi}" data-pc="${pc}" type="button"><span>${pcName(pc)}</span></button>`;
   }
   return html+"</div>";
 }
 function bindPiano(wrap,fn){
-  wrap.querySelectorAll(".key").forEach(k=>k.addEventListener("click",()=>fn(+k.dataset.pc)));
+  wrap.querySelectorAll(".key").forEach(k=>k.addEventListener("click",()=>{
+    flashPianoEl(k,480);
+    fn(+k.dataset.pc,+k.dataset.midi,k);
+  }));
 }
 function noteButtons(wrapId,selected,onPick){
   const w=$(wrapId);
@@ -1326,7 +1468,7 @@ function noteButtons(wrapId,selected,onPick){
 }
 
 /* ================= SCALE EXPLORER ================= */
-let scaleRoot=0, scaleKey="major", scaleDir="up", scaleTempo=72, scalePlaying=false, scaleTimer=null;
+let scaleRoot=0, scaleKey="major", scaleDir="up", scaleTempo=72, scalePlaying=false, scaleTimers=[];
 function renderScale(){
   const sc=SCALES[scaleKey]; const pcs=sc.iv.map(i=>(scaleRoot+i)%12);
   const hl=new Map();
@@ -1337,13 +1479,16 @@ function renderScale(){
   $("scaleFretboard").innerHTML=fretboardHTML({highlight:hl,showNames:true});
   bindFretboard($("scaleFretboard"),(s,f)=>{initAudio();bassNote(stringFreq(s,f),actx.currentTime,0.6,0.9);});
   $("scalePiano").innerHTML=pianoHTML(new Set(pcs),scaleRoot);
-  bindPiano($("scalePiano"),pc=>{initAudio();pianoNote(midiFreq(48+pc),actx.currentTime,0.6,0.7);});
+  bindPiano($("scalePiano"),(pc,midi)=>{initAudio();pianoNote(midiFreq(midi||48+pc),actx.currentTime,0.65,0.75);});
   const rows=sc.iv.map((iv,i)=>{
     const pc=(scaleRoot+iv)%12;
     return `<tr><td><b>${sc.deg[i]}</b></td><td><b>${pcName(pc)}</b></td><td>${iv} semitones</td><td><button class="btn" data-pc="${pc}" type="button" style="padding:4px 10px">▶ Hear</button></td></tr>`;
   }).join("");
   $("scaleTable").innerHTML=`<table class="note-table"><thead><tr><th>Degree</th><th>Note</th><th>Interval from root</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
-  $("scaleTable").querySelectorAll("button[data-pc]").forEach(b=>b.addEventListener("click",()=>{initAudio();pianoNote(midiFreq(48+(+b.dataset.pc)),actx.currentTime,0.7,0.7);}));
+  $("scaleTable").querySelectorAll("button[data-pc]").forEach(b=>b.addEventListener("click",()=>{
+    const pc=+b.dataset.pc; initAudio(); pianoNote(midiFreq(48+pc),actx.currentTime,0.7,0.75);
+    flashPianoEl($("scalePiano").querySelector(`.key[data-oct="0"][data-pc="${pc}"]`),500);
+  }));
   $("scaleTheory").innerHTML=`<b>${pcName(scaleRoot)} ${sc.name}</b> — ${sc.desc}<br><b>Notes:</b> ${sc.iv.map(iv=>pcName(scaleRoot+iv)).join(" · ")}`;
 }
 function playScale(){
@@ -1355,13 +1500,21 @@ function playScale(){
   scalePlaying=true; const step=(60/scaleTempo)*0.85; const t0=actx.currentTime+0.08;
   notes.forEach((n,i)=>{
     bassNote(stringFreq(n.s,n.f),t0+i*step,step*0.9,0.9);
-    scaleTimer=setTimeout(()=>{ if(!scalePlaying) return;
+    const pc=((n.m%12)+12)%12;
+    const oct=n.m>=40?1:0;
+    scaleTimers.push(setTimeout(()=>{ if(!scalePlaying) return;
       document.querySelectorAll("#scaleFretboard .fb-cell").forEach(c=>c.classList.toggle("now",+c.dataset.s===n.s&&+c.dataset.f===n.f));
-    },i*step*1000);
+      document.querySelectorAll("#scalePiano .key").forEach(k=>k.classList.toggle("on",+k.dataset.pc===pc&&+k.dataset.oct===oct));
+    },i*step*1000));
   });
-  scaleTimer=setTimeout(stopScale,notes.length*step*1000+200);
+  scaleTimers.push(setTimeout(stopScale,notes.length*step*1000+220));
 }
-function stopScale(){ scalePlaying=false; clearTimeout(scaleTimer); document.querySelectorAll("#scaleFretboard .fb-cell").forEach(c=>c.classList.remove("now")); }
+function stopScale(){
+  scalePlaying=false;
+  while(scaleTimers.length) clearTimeout(scaleTimers.pop());
+  document.querySelectorAll("#scaleFretboard .fb-cell").forEach(c=>c.classList.remove("now"));
+  document.querySelectorAll("#scalePiano .key").forEach(k=>k.classList.remove("on"));
+}
 
 /* ================= CHORD BUILDER ================= */
 let chordRoot=0, chordKey="maj", chordInv=0;
@@ -1376,7 +1529,6 @@ function renderChord(){
     const pc=((stringMidi(s,f)%12)+12)%12;
     const idx=pcs.indexOf(pc);
     if(idx>=0){
-      const role=ch.roles[idx]||"ext";
       const cls=idx===0?"root":"tone";
       hl.set(s+"-"+f,{cls});
     }
@@ -1384,19 +1536,37 @@ function renderChord(){
   $("chordFretboard").innerHTML=fretboardHTML({highlight:hl,showNames:true});
   bindFretboard($("chordFretboard"),(s,f)=>{initAudio();bassNote(stringFreq(s,f),actx.currentTime,0.6,0.9);});
   $("chordPiano").innerHTML=pianoHTML(new Set(pcs),chordRoot);
-  bindPiano($("chordPiano"),pc=>{initAudio();pianoNote(midiFreq(48+pc),actx.currentTime,0.6,0.7);});
-  const rows=ch.iv.map((iv,i)=>`<tr><td><b>${ch.roles[i]||"ext"}</b></td><td><b>${pcName(chordRoot+iv)}</b></td><td>${iv} semitones</td><td><button class="btn" data-pc="${(chordRoot+iv)%12}" type="button" style="padding:4px 10px">▶ Hear</button></td></tr>`).join("");
+  bindPiano($("chordPiano"),(pc,midi)=>{initAudio();pianoNote(midiFreq(midi||48+pc),actx.currentTime,0.65,0.75);});
+  const rows=ch.iv.map((iv,i)=>`<tr><td><b>${ch.roles[i]||"ext"}</b></td><td><b>${pcName(chordRoot+iv)}</b></td><td>${iv} semitones</td><td><button class="btn" data-pc="${(chordRoot+iv)%12}" data-iv="${iv}" type="button" style="padding:4px 10px">▶ Hear</button></td></tr>`).join("");
   $("chordTable").innerHTML=`<table class="note-table"><thead><tr><th>Role</th><th>Note</th><th>Interval</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
-  $("chordTable").querySelectorAll("button[data-pc]").forEach(b=>b.addEventListener("click",()=>{initAudio();pianoNote(midiFreq(48+(+b.dataset.pc)),actx.currentTime,0.7,0.7);}));
+  $("chordTable").querySelectorAll("button[data-pc]").forEach(b=>b.addEventListener("click",()=>{
+    const iv=+b.dataset.iv, m=48+chordRoot+iv, pc=+b.dataset.pc, oct=iv>=12?1:0;
+    initAudio(); pianoNote(midiFreq(m),actx.currentTime,0.7,0.75);
+    flashPianoEl($("chordPiano").querySelector(`.key[data-oct="${oct}"][data-pc="${pc}"]`)||$("chordPiano").querySelector(`.key[data-pc="${pc}"]`),500);
+  }));
   const invName=["root position","1st inversion (3rd in bass)","2nd inversion (5th in bass)"][chordInv];
   $("chordTheory").innerHTML=`<b>${pcName(chordRoot)}${ch.name}</b> (${invName}) — ${ch.desc}<br><b>Notes:</b> ${ch.iv.map(iv=>pcName(chordRoot+iv)).join(" · ")} · <b>Formula:</b> ${ch.iv.join(" + ")} semitones`;
 }
-function playChordArp(strum){
-  initAudio(); const {pcs}=chordNotes();
+async function playChordArp(strum){
+  initAudio(); const {ch,pcs}=chordNotes();
   const notes=notesInWindow(pcs,0,12);
-  const t0=actx.currentTime+0.08;
-  if(strum){ notes.slice(0,6).forEach((n,i)=>pianoNote(midiFreq(n.m+12),t0+i*0.06,0.9,0.6)); }
-  else { notes.forEach((n,i)=>bassNote(stringFreq(n.s,n.f),t0+i*0.28,0.5,0.9)); }
+  if(strum){
+    const midis=ch.iv.map(iv=>48+chordRoot+iv);
+    try{ await preloadPiano(midis); }catch(e){}
+    const t0=actx.currentTime+0.05;
+    midis.forEach((m,i)=>{
+      pianoNote(midiFreq(m),t0+i*0.055,1.0,0.62);
+      const pc=((m%12)+12)%12, oct=m>=60?1:0;
+      setTimeout(()=>flashPianoEl($("chordPiano").querySelector(`.key[data-oct="${oct}"][data-pc="${pc}"]`)||$("chordPiano").querySelector(`.key[data-pc="${pc}"]`),850),i*55);
+    });
+  } else {
+    const t0=actx.currentTime+0.06;
+    notes.forEach((n,i)=>{
+      bassNote(stringFreq(n.s,n.f),t0+i*0.28,0.5,0.9);
+      const pc=((n.m%12)+12)%12, oct=n.m>=40?1:0;
+      setTimeout(()=>flashPianoEl($("chordPiano").querySelector(`.key[data-oct="${oct}"][data-pc="${pc}"]`),320),i*280);
+    });
+  }
 }
 
 /* ================= INTERVAL TRAINER ================= */
@@ -1410,10 +1580,13 @@ function renderIntervals(){
   $("intervalTable").querySelectorAll("button[data-s]").forEach(b=>b.addEventListener("click",()=>playInterval(+b.dataset.s,false)));
   $("intervalTheory").innerHTML=`Base note <b>${pcName(intRoot)}</b>. Intervals are measured in semitones (half steps). <b>Perfect</b> intervals (4th, 5th, octave) sound stable; <b>major/minor</b> intervals come in bright/dark pairs. On one string, the fret distance <i>is</i> the semitone count.`;
 }
-function playInterval(semis,slow){
-  initAudio(); const t0=actx.currentTime+0.08; const gap=slow?1.1:0.55;
-  pianoNote(midiFreq(48+intRoot),t0,0.6,0.7);
-  pianoNote(midiFreq(48+intRoot+semis),t0+gap,0.8,0.7);
+async function playInterval(semis,slow){
+  initAudio();
+  const m1=48+intRoot, m2=48+intRoot+semis;
+  try{ await preloadPiano([m1,m2]); }catch(e){}
+  const t0=actx.currentTime+0.05; const gap=slow?1.1:0.55;
+  pianoNote(midiFreq(m1),t0,0.6,0.75);
+  pianoNote(midiFreq(m2),t0+gap,0.85,0.75);
 }
 
 /* ================= EAR QUIZ ================= */
@@ -1455,11 +1628,24 @@ function newQuiz(){
   playQuizPrompt();
   updateQuizScore();
 }
-function playQuizPrompt(){
-  initAudio(); const mode=$("quizMode").value; const t0=actx.currentTime+0.08;
-  if(mode==="note"){ pianoNote(midiFreq(48+quiz.answer.pc),t0,0.9,0.8); }
-  else if(mode==="interval"){ pianoNote(midiFreq(48+0),t0,0.6,0.7); pianoNote(midiFreq(48+quiz.answer.s),t0+0.6,0.9,0.7); }
-  else { const ch=CHORDS[quiz.answer.key]; ch.iv.forEach(iv=>pianoNote(midiFreq(48+quiz.answer.root+iv),t0,1.2,0.5)); }
+async function playQuizPrompt(){
+  initAudio(); const mode=$("quizMode").value;
+  if(mode==="note"){
+    const m=48+quiz.answer.pc;
+    try{ await preloadPiano([m]); }catch(e){}
+    pianoNote(midiFreq(m),actx.currentTime+0.05,0.9,0.8);
+  } else if(mode==="interval"){
+    const m1=48, m2=48+quiz.answer.s;
+    try{ await preloadPiano([m1,m2]); }catch(e){}
+    const t0=actx.currentTime+0.05;
+    pianoNote(midiFreq(m1),t0,0.6,0.75); pianoNote(midiFreq(m2),t0+0.6,0.9,0.75);
+  } else {
+    const ch=CHORDS[quiz.answer.key];
+    const midis=ch.iv.map(iv=>48+quiz.answer.root+iv);
+    try{ await preloadPiano(midis); }catch(e){}
+    const t0=actx.currentTime+0.05;
+    midis.forEach(m=>pianoNote(midiFreq(m),t0,1.2,0.52));
+  }
 }
 function answerQuiz(i){
   if(quiz.lock) return; quiz.lock=true;
@@ -1553,20 +1739,25 @@ function renderProg(){
   bindFretboard($("progFretboard"),(s,f)=>{initAudio();bassNote(stringFreq(s,f),actx.currentTime,0.6,0.9);});
   $("progTheory").innerHTML=`Key of <b>${pcName(progKey)}</b>. Roman numerals show each chord's job in the key: <b>I</b> = home, <b>V</b> = tension pulling home, <b>vi/IV</b> = colour and movement. Play it on loop and practise finding the roots by ear.`;
 }
-function playProg(){
+async function playProg(){
   initAudio(); stopProg(); progPlaying=true;
-  const p=PROGS[$("progType").value]; const spb=60/progTempo; const t0=actx.currentTime+0.08;
+  const p=PROGS[$("progType").value]; const spb=60/progTempo;
+  const allMidis=[];
+  p.chords.forEach((ck,i)=>{ const root=(progKey+p.roots[i])%12; CHORDS[ck].iv.forEach(iv=>allMidis.push(48+root+iv)); });
+  try{ await preloadPiano(allMidis); }catch(e){}
+  if(!progPlaying) return;
+  const t0=actx.currentTime+0.06;
   let bar=0;
   const playBar=()=>{
     if(!progPlaying) return;
     const ck=p.chords[bar%p.chords.length]; const root=(progKey+p.roots[bar%p.roots.length])%12;
-    const barStart=t0+bar*4*spb;
+    const barStart=Math.max(actx.currentTime+0.02,t0+bar*4*spb);
     const rootNotes=notesInWindow([root],0,12).filter(n=>n.m<40);
     const rn=rootNotes[0];
     if(rn){ bassNote(stringFreq(rn.s,rn.f),barStart,spb*0.9,0.9); bassNote(stringFreq(rn.s,rn.f),barStart+2*spb,spb*0.9,0.9); }
     const fifthNotes=notesInWindow([(root+7)%12],0,12).filter(n=>n.m<44);
     if(fifthNotes[0]){ bassNote(stringFreq(fifthNotes[0].s,fifthNotes[0].f),barStart+spb,spb*0.9,0.8); bassNote(stringFreq(fifthNotes[0].s,fifthNotes[0].f),barStart+3*spb,spb*0.9,0.8); }
-    CHORDS[ck].iv.forEach(iv=>pianoNote(midiFreq(48+root+iv),barStart,spb*3.6,0.4));
+    CHORDS[ck].iv.forEach(iv=>pianoNote(midiFreq(48+root+iv),barStart,spb*3.6,0.45));
     bar++;
     progTimer=setTimeout(playBar,4*spb*1000);
   };
@@ -1635,7 +1826,9 @@ function setLevel(lv){
 /* ================= JAZZ TOOL ================= */
 function renderJazz(){
   const sel=$("jazzSong");
-  sel.innerHTML=JAZZ_SONGS.map((s,i)=>`<option value="${i}">${s.title} — ${s.key}</option>`).join("");
+  const prev=sel.value||"0";
+  if(!sel.options.length) sel.innerHTML=JAZZ_SONGS.map((s,i)=>`<option value="${i}">${s.title} — ${s.key}</option>`).join("");
+  sel.value=prev;
   const song=JAZZ_SONGS[+sel.value||0];
   $("jazzTheory").innerHTML=song.theory;
   $("jazzChart").innerHTML=walkingBass(song.chords).chart.map((c,i)=>`<span class="chord-chip">${c.symbol}<small>bar ${i+1}</small></span>`).join("");
@@ -1666,13 +1859,20 @@ function switchScreen(name){
 }
 window.switchScreen=switchScreen;
 function syncTrackToggles(){
+  const drumsOn=isDrumsActive();
+  const hasPiano=!!(exData&&exData.piano);
   document.querySelectorAll(".track-toggle").forEach(b=>{
-    const on=!!jazzTracks[b.dataset.track];
+    const t=b.dataset.track;
+    const on=t==="drums"?drumsOn:(t==="bass"?!!jazzTracks.bass:(hasPiano&&!!jazzTracks[t]));
     b.classList.toggle("on",on); b.classList.toggle("off",!on);
+    if(t==="comp"||t==="melody"){
+      b.disabled=!hasPiano;
+      b.title=hasPiano?"Click to mute / unmute":"Available on Jazz Play-along songs";
+    }
   });
   document.querySelectorAll("#jazzTracks .chip").forEach(c=>c.classList.toggle("on",!!jazzTracks[c.dataset.t]));
   const tb=$("trackBass"); if(tb) tb.classList.toggle("on",!!jazzTracks.bass);
-  const td=$("trackDrums"); if(td) td.classList.toggle("on",!!jazzTracks.drums);
+  const td=$("trackDrums"); if(td) td.classList.toggle("on",drumsOn);
 }
 
 /* ================= TOOL TABS ================= */
@@ -1721,10 +1921,13 @@ function init(){
   $("metroBtn").addEventListener("click",()=>{ metroOn=!metroOn; $("metroBtn").classList.toggle("on",metroOn); });
   $("countBtn").addEventListener("click",()=>{ countIn=!countIn; $("countBtn").classList.toggle("on",countIn); });
   $("trackGuide").addEventListener("click",()=>{ guideOn=!guideOn; $("trackGuide").classList.toggle("on",guideOn); });
-  $("trackBass").addEventListener("click",()=>{ jazzTracks.bass=!jazzTracks.bass; $("trackBass").classList.toggle("on",jazzTracks.bass); syncTrackToggles(); });
-  $("trackDrums").addEventListener("click",()=>{ jazzTracks.drums=!jazzTracks.drums; $("trackDrums").classList.toggle("on",jazzTracks.drums); syncTrackToggles(); });
+  $("trackBass").addEventListener("click",()=>{ jazzTracks.bass=!jazzTracks.bass; syncTrackToggles(); });
+  $("trackDrums").addEventListener("click",()=>toggleDrumsTrack());
   document.querySelectorAll(".track-toggle").forEach(b=>b.addEventListener("click",()=>{
-    const t=b.dataset.track; jazzTracks[t]=!jazzTracks[t]; syncTrackToggles();
+    if(b.disabled) return;
+    const t=b.dataset.track;
+    if(t==="drums") toggleDrumsTrack();
+    else { jazzTracks[t]=!jazzTracks[t]; syncTrackToggles(); }
   }));
   $("drumVol").addEventListener("input",e=>{ if(drumGainNode) drumGainNode.gain.value=e.target.value/100; });
   $("tempoDown").addEventListener("click",()=>setTempo(tempo-5));
