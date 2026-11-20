@@ -148,14 +148,24 @@ select,input{font-family:inherit}
 .fb-fret-nums{display:grid;min-width:640px}
 .fb-fret-nums span{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:700}
 .piano{display:flex;min-width:560px;height:130px;border:1px solid #333;border-radius:6px;overflow:hidden;background:#111}
-.key{position:relative;flex:1;border-right:1px solid #333;background:#fff;cursor:pointer;padding:0}
+.key{position:relative;flex:1;border-right:1px solid #333;background:#fff;cursor:pointer;padding:0;transition:background .08s,box-shadow .08s}
 .key.black{background:#111;flex:.62;margin:0 -4px;z-index:2;height:62%;border-radius:0 0 4px 4px}
-.key.on{background:var(--accent) !important}
-.key.root{background:#ff8c1a !important}
-.key.tone{background:#93c5fd !important}
+.key.on{background:var(--accent) !important;box-shadow:inset 0 0 0 3px #fff,0 0 14px rgba(255,140,26,.9);z-index:3}
+.key.root{background:#ff8c1a !important;box-shadow:inset 0 0 0 2px #fff}
+.key.tone{background:#60a5fa !important}
 .key span{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:#666}
 .key.black span{color:#aaa;bottom:3px}
-.key.on span,.key.root span{color:#111}
+.key.on span,.key.root span{color:#111;font-size:12px}
+.key.on span{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.screennav{display:flex;gap:6px;margin-left:10px}
+.screennav button{border:1px solid #3a3a3a;background:#1f1f1f;color:#d1d5db;border-radius:8px;padding:7px 14px;font-size:13.5px;font-weight:700}
+.screennav button.on{background:var(--accent);color:#111;border-color:var(--accent)}
+.track-toggle{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700}
+.track-toggle.on{background:var(--chrome);color:#fff;border-color:var(--chrome)}
+.track-toggle.off{opacity:.55}
+.metro-icon{width:20px;height:20px;display:block}
+#screenTools{display:none}
+#screenTools.on{display:block}
 
 /* ---------- Tools ---------- */
 .tools-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:26px 0 12px}
@@ -257,8 +267,11 @@ footer a:hover{color:var(--accent)}
 
 <header class="topbar">
   <a class="logo" href="index.html"><span class="logo-mark">🎸</span><span><b>KebabKilla</b><span class="lab">THEORY LAB</span></span></a>
+  <div class="screennav" role="tablist" aria-label="Screen">
+    <button id="navLab" class="on" type="button">🎼 Theory Lab</button>
+    <button id="navTools" type="button">🧰 Tools</button>
+  </div>
   <nav class="topnav">
-    <a href="index.html" class="active">Theory Lab</a>
     <a href="practice.html">Altered Dominants</a>
     <a href="practice2.html">Fingers</a>
     <a href="practice3.html">Scales</a>
@@ -284,7 +297,7 @@ footer a:hover{color:var(--accent)}
 
 <main class="wrap">
   <!-- ============ LEVEL PICKER ============ -->
-  <section class="card level-hero" aria-label="Choose your level">
+  <section class="card level-hero" id="labHero" aria-label="Choose your level">
     <div class="card-h"><h2>🎓 What do you want to learn?</h2><span class="hint">Pick a level — your lessons, tools and exercises will organise themselves around it. Saved on this device.</span><span class="piano-badge" id="pianoBadge"><span class="dot"></span><span id="pianoBadgeText">🎹 Piano: synth (tap Play to load sampled piano)</span></span></div>
     <div class="card-b">
       <div class="level-grid" id="levelGrid">
@@ -313,7 +326,7 @@ footer a:hover{color:var(--accent)}
     </div>
   </section>
 
-  <div class="layout">
+  <div class="layout" id="labMain">
     <!-- ============ PLAYER ============ -->
     <section class="card" aria-label="Tab player">
       <div class="player-toolbar">
@@ -326,8 +339,8 @@ footer a:hover{color:var(--accent)}
         <div class="tracktabs" aria-label="Tracks">
           <button class="on" type="button" id="trackBass">🎸 Bass</button>
           <button type="button" id="trackGuide" title="Plays the root an octave up as a piano guide">🎹 Guide</button>
-          <button type="button" disabled title="This lab is bass-only">🥁 Drums</button>
-          <button type="button" disabled title="This lab is bass-only">🎤 Vocals</button>
+          <button type="button" id="trackDrums" title="Swing drum track (play-alongs)">🥁 Drums</button>
+          <button type="button" disabled title="Not in this lab">🎤 Vocals</button>
         </div>
         <label>Zoom <input type="range" id="zoomRange" min="44" max="120" value="72"></label>
         <label>Tuning
@@ -362,7 +375,7 @@ footer a:hover{color:var(--accent)}
         <button class="tbtn" id="stopBtn" type="button" title="Stop">⏹</button>
         <button class="tbtn" id="fwdBtn" type="button" title="Forward one bar">▶▶</button>
         <button class="tbtn" id="loopBtn" type="button" title="Loop (L)">🔁</button>
-        <button class="tbtn" id="metroBtn" type="button" title="Metronome (M)">🥁</button>
+        <button class="tbtn" id="metroBtn" type="button" title="Metronome (M)"><svg class="metro-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l2 18H7L9 3z"/><path d="M12 21L17 8"/><circle cx="17" cy="8" r="1.6" fill="currentColor" stroke="none"/><path d="M6 21h12"/></svg></button>
         <button class="tbtn" id="countBtn" type="button" title="Count-in (one bar)">1·2·3·4</button>
         <div class="tgroup"><label>TEMPO</label><button id="tempoDown" type="button">−</button><span class="val"><span id="tempoVal">80</span> BPM</span><button id="tempoUp" type="button">+</button></div>
         <div class="tgroup"><label>SPEED</label><button id="speedDown" type="button">−</button><span class="val" id="speedVal">1.0×</span><button id="speedUp" type="button">+</button></div>
@@ -390,10 +403,17 @@ footer a:hover{color:var(--accent)}
         </div>
       </div>
       <div class="card">
-        <div class="card-h"><h3>🎚 Tracks</h3></div>
+        <div class="card-h"><h3>🎚 Tracks</h3><span class="hint">tap to mute / unmute</span></div>
         <div class="card-b">
+          <div class="chip-row" style="margin-bottom:10px">
+            <button class="track-toggle on" data-track="bass" type="button">🎸 Bass</button>
+            <button class="track-toggle on" data-track="comp" type="button">🎹 Piano comping</button>
+            <button class="track-toggle on" data-track="melody" type="button">🎵 Melody</button>
+            <button class="track-toggle on" data-track="drums" type="button">🥁 Drums</button>
+          </div>
           <div class="track-row"><span class="dot"></span><div><b>Bass</b><small>Main tab track</small></div><input type="range" id="bassVol" min="0" max="100" value="85" aria-label="Bass volume"></div>
           <div class="track-row"><span class="dot" style="background:#3b82f6"></span><div><b>Piano guide</b><small>Root, octave up (toggle above)</small></div><input type="range" id="guideVol" min="0" max="100" value="45" aria-label="Guide volume"></div>
+          <div class="track-row"><span class="dot" style="background:#f59e0b"></span><div><b>🥁 Drums</b><small>Swing kit (play-alongs)</small></div><input type="range" id="drumVol" min="0" max="100" value="70" aria-label="Drums volume"></div>
           <div class="track-row"><span class="dot" style="background:#9ca3af"></span><div><b>Metronome</b><small>Click track (toggle above)</small></div><input type="range" id="metroVol" min="0" max="100" value="60" aria-label="Metronome volume"></div>
         </div>
       </div>
@@ -415,9 +435,10 @@ footer a:hover{color:var(--accent)}
     </aside>
   </div>
 
-  <!-- ============ TOOLS ============ -->
-  <div class="tools-head">
-    <h2>🧰 Music Theory Tools</h2>
+  <!-- ============ TOOLS (separate screen, independent of classes) ============ -->
+  <div id="screenTools">
+  <div class="tools-head" style="margin-top:0">
+    <h2>🧰 Music Theory Tools</h2><span class="muted">Separate screen — always available, independent of your level. Pick a tool below.</span>
     <div class="tool-tabs" id="toolTabs">
       <button data-tool="scale" class="on" type="button">🎼 Scale Explorer</button>
       <button data-tool="chord" type="button">🎹 Chord Builder</button>
@@ -554,6 +575,7 @@ footer a:hover{color:var(--accent)}
             <button class="chip on" data-t="bass" type="button">🎸 Bass line (tab)</button>
             <button class="chip on" data-t="comp" type="button">🎹 Piano comping</button>
             <button class="chip on" data-t="melody" type="button">🎵 Piano melody</button>
+            <button class="chip on" data-t="drums" type="button">🥁 Drums</button>
           </div>
         </div>
         <div class="btn-row"><button class="btn primary big-play" id="jazzPlay" type="button">▶ Play in tab player</button><button class="btn" id="jazzStop" type="button">⏹ Stop</button></div>
@@ -567,9 +589,10 @@ footer a:hover{color:var(--accent)}
       </div>
     </div>
   </section>
+  </div><!-- /screenTools -->
 
-  <!-- ============ CURRICULUM ============ -->
-  <div class="tools-head"><h2 id="curriculumTitle">📚 Your learning path</h2><span class="muted" id="curriculumSub"></span></div>
+  <!-- ============ CURRICULUM (lab screen) ============ -->
+  <div class="tools-head" id="curriculumHead"><h2 id="curriculumTitle">📚 Your learning path</h2><span class="muted" id="curriculumSub"></span></div>
   <div class="curriculum-grid" id="curriculum"></div>
 </main>
 
@@ -650,7 +673,7 @@ const INTERVALS=[
 ];
 
 /* ================= AUDIO ================= */
-let actx=null, master=null, bassGainNode=null, guideGainNode=null, metroGainNode=null;
+let actx=null, master=null, bassGainNode=null, guideGainNode=null, metroGainNode=null, drumGainNode=null, noiseBuffer=null;
 function initAudio(){
   if(actx){ if(actx.state==="suspended") actx.resume(); return; }
   actx=new (window.AudioContext||window.webkitAudioContext)();
@@ -658,27 +681,81 @@ function initAudio(){
   bassGainNode=actx.createGain(); bassGainNode.gain.value=0.85; bassGainNode.connect(master);
   guideGainNode=actx.createGain(); guideGainNode.gain.value=0.45; guideGainNode.connect(master);
   metroGainNode=actx.createGain(); metroGainNode.gain.value=0.6; metroGainNode.connect(master);
+  drumGainNode=actx.createGain(); drumGainNode.gain.value=0.7; drumGainNode.connect(master);
+  noiseBuffer=actx.createBuffer(1,actx.sampleRate*1,actx.sampleRate);
+  const d=noiseBuffer.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
 }
 function bassNote(freq,when,dur,vol){
-  const o1=actx.createOscillator(),o2=actx.createOscillator(),o3=actx.createOscillator();
-  o1.type="sawtooth"; o2.type="sine"; o3.type="triangle";
-  o1.frequency.value=freq; o2.frequency.value=freq; o3.frequency.value=freq*2;
-  const g1=actx.createGain(),g2=actx.createGain(),g3=actx.createGain();
-  g1.gain.value=0.28; g2.gain.value=0.55; g3.gain.value=0.14;
-  const f=actx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=Math.min(2400,700+freq*3); f.Q.value=0.8;
-  const env=actx.createGain(); const d=Math.max(0.08,dur);
-  env.gain.setValueAtTime(0,when);
-  env.gain.linearRampToValueAtTime(vol,when+0.012);
-  env.gain.exponentialRampToValueAtTime(Math.max(0.05,vol*0.55),when+Math.min(0.12,d*0.5));
-  env.gain.setValueAtTime(Math.max(0.05,vol*0.4),when+Math.max(0.12,d-0.05));
-  env.gain.linearRampToValueAtTime(0,when+d);
-  o1.connect(g1); o2.connect(g2); o3.connect(g3);
-  g1.connect(f); g2.connect(f); g3.connect(f); f.connect(env); env.connect(bassGainNode);
-  [o1,o2,o3].forEach(o=>{o.start(when);o.stop(when+d+0.05);});
+  /* Natural plucked bass: Karplus-Strong string + pick attack + body sine */
+  initAudio();
+  const d=Math.max(0.15,dur);
+  const out=actx.createGain(); out.gain.value=vol; out.connect(bassGainNode);
+  /* --- Karplus-Strong string --- */
+  const exc=actx.createBufferSource(); exc.buffer=noiseBuffer;
+  const delay=actx.createDelay(0.1); delay.delayTime.value=1/freq;
+  const damp=actx.createBiquadFilter(); damp.type="lowpass"; damp.frequency.value=Math.min(3500,freq*6); damp.Q.value=0.5;
+  const fb=actx.createGain(); fb.gain.value=0.996;
+  const strEnv=actx.createGain();
+  strEnv.gain.setValueAtTime(0,when);
+  strEnv.gain.linearRampToValueAtTime(0.9,when+0.004);
+  strEnv.gain.exponentialRampToValueAtTime(0.001,when+d);
+  exc.connect(delay); delay.connect(damp); damp.connect(fb); fb.connect(delay);
+  delay.connect(strEnv); strEnv.connect(out);
+  exc.start(when); exc.stop(when+0.03);
+  /* --- Body: fundamental sine with soft attack --- */
+  const body=actx.createOscillator(); body.type="sine"; body.frequency.value=freq;
+  const bodyG=actx.createGain();
+  bodyG.gain.setValueAtTime(0,when);
+  bodyG.gain.linearRampToValueAtTime(0.55,when+0.01);
+  bodyG.gain.exponentialRampToValueAtTime(0.001,when+Math.min(d,0.6));
+  body.connect(bodyG); bodyG.connect(out);
+  body.start(when); body.stop(when+d+0.05);
+  /* --- Pick attack: short highpassed noise --- */
+  const pick=actx.createBufferSource(); pick.buffer=noiseBuffer;
+  const hp=actx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1800;
+  const pickG=actx.createGain();
+  pickG.gain.setValueAtTime(0.35,when);
+  pickG.gain.exponentialRampToValueAtTime(0.001,when+0.03);
+  pick.connect(hp); hp.connect(pickG); pickG.connect(out);
+  pick.start(when); pick.stop(when+0.04);
+}
+/* ---- Drum kit (swing) ---- */
+function drumKick(when,vol){
+  const o=actx.createOscillator(),g=actx.createGain();
+  o.type="sine";
+  o.frequency.setValueAtTime(150,when);
+  o.frequency.exponentialRampToValueAtTime(45,when+0.12);
+  g.gain.setValueAtTime(vol,when);
+  g.gain.exponentialRampToValueAtTime(0.001,when+0.25);
+  o.connect(g); g.connect(drumGainNode); o.start(when); o.stop(when+0.3);
+}
+function drumSnare(when,vol){
+  const n=actx.createBufferSource(); n.buffer=noiseBuffer;
+  const hp=actx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1500;
+  const g=actx.createGain();
+  g.gain.setValueAtTime(vol,when);
+  g.gain.exponentialRampToValueAtTime(0.001,when+0.18);
+  n.connect(hp); hp.connect(g); g.connect(drumGainNode);
+  n.start(when); n.stop(when+0.2);
+  const o=actx.createOscillator(),og=actx.createGain();
+  o.type="triangle"; o.frequency.value=190;
+  og.gain.setValueAtTime(vol*0.5,when);
+  og.gain.exponentialRampToValueAtTime(0.001,when+0.08);
+  o.connect(og); og.connect(drumGainNode); o.start(when); o.stop(when+0.1);
+}
+function drumHat(when,vol,open){
+  const n=actx.createBufferSource(); n.buffer=noiseBuffer;
+  const hp=actx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=7000;
+  const g=actx.createGain(); const dur=open?0.25:0.05;
+  g.gain.setValueAtTime(vol,when);
+  g.gain.exponentialRampToValueAtTime(0.001,when+dur);
+  n.connect(hp); hp.connect(g); g.connect(drumGainNode);
+  n.start(when); n.stop(when+dur+0.02);
 }
 /* ---- Natural piano: sampled Salamander Grand Piano (Tone.js audio) with synth fallback ---- */
 const pianoBuffers=new Map();   // midi -> AudioBuffer
-const pianoLoading=new Set();
+const pianoPromises=new Map();  // midi -> Promise (so every key uses the same sample)
 let pianoReady=false, pianoFailed=false;
 function midiToSampleName(m){
   const names=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -689,14 +766,15 @@ function setPianoBadge(state,text){
   b.className="piano-badge "+state; $("pianoBadgeText").textContent=text;
 }
 function loadPianoNote(m){
-  if(pianoBuffers.has(m)||pianoLoading.has(m)||!actx) return;
-  pianoLoading.add(m);
+  if(pianoBuffers.has(m)) return Promise.resolve(true);
+  if(pianoPromises.has(m)) return pianoPromises.get(m);
+  if(!actx) return Promise.resolve(false);
   const name=midiToSampleName(m);
   const urls=[
     "https://cdn.jsdelivr.net/gh/Tonejs/audio@master/salamander/"+name+".mp3",
     "https://tonejs.github.io/audio/salamander/"+name+".mp3"
   ];
-  (async()=>{
+  const p=(async()=>{
     for(const url of urls){
       try{
         const res=await fetch(url);
@@ -706,20 +784,24 @@ function loadPianoNote(m){
         pianoBuffers.set(m,audio);
         pianoReady=true; pianoFailed=false;
         setPianoBadge("ready","🎹 Piano: sampled grand (Salamander)");
-        pianoLoading.delete(m); return;
+        return true;
       }catch(e){ /* try next url */ }
     }
-    pianoLoading.delete(m);
     if(pianoBuffers.size===0&&!pianoReady){
       pianoFailed=true;
       setPianoBadge("","🎹 Piano: synth fallback (samples offline)");
     }
+    return false;
   })();
+  pianoPromises.set(m,p);
+  return p;
 }
 function preloadPiano(midis){
   initAudio();
-  setPianoBadge("loading","🎹 Piano: loading sampled grand…");
-  [...new Set(midis)].forEach(m=>loadPianoNote(m));
+  const uniq=[...new Set(midis)];
+  const missing=uniq.filter(m=>!pianoBuffers.has(m));
+  if(missing.length) setPianoBadge("loading","🎹 Piano: loading sampled grand… ("+missing.length+" notes)");
+  return Promise.all(uniq.map(m=>loadPianoNote(m)));
 }
 function pianoSynthNote(freq,when,dur,vol){
   /* Improved piano-ish synth used only until samples arrive / if offline */
@@ -911,7 +993,8 @@ let isPlaying=false, loopOn=false, metroOn=false, countIn=false, guideOn=false;
 let loopStart=null, loopEnd=null, seekBeat=0;
 let startCtxTime=0, startBeat=0, schedTimer=null, rafId=null;
 let nextIdx=0, nextBeatTime=0, lastMetroBeat=-1, countInUntil=0;
-let nextPianoIdx=0, jazzTracks={bass:true,comp:true,melody:true};
+let nextPianoIdx=0, jazzTracks={bass:true,comp:true,melody:true,drums:true};
+let lastHatStep=-1;
 const BEATS_PER_BAR=4;
 
 function secPerBeat(){ return (60/tempo)/speed; }
@@ -1065,7 +1148,7 @@ function schedulerTick(){
     const b=startBeat+(nextBeatTime-startCtxTime)/secPerBeat();
     if(b>=exData.totalBeats){
       if(loopOn&&loopStart!==null&&loopEnd!==null&&loopEnd>loopStart){
-        startBeat=loopStart; startCtxTime=nextBeatTime; nextIdx=notesFromBeat(loopStart); nextPianoIdx=pianoFromBeat(loopStart); lastMetroBeat=-1;
+        startBeat=loopStart; startCtxTime=nextBeatTime; nextIdx=notesFromBeat(loopStart); nextPianoIdx=pianoFromBeat(loopStart); lastMetroBeat=-1; lastHatStep=-1;
         continue;
       }
       stopPlayback(); return;
@@ -1098,6 +1181,22 @@ function schedulerTick(){
       const beatInt=Math.floor(b);
       if(beatInt!==lastMetroBeat&&b>=beatInt){ click(nextBeatTime,beatInt%BEATS_PER_BAR===0); lastMetroBeat=beatInt; }
     }
+    /* Swing drums (play-alongs): kick 1&3, snare 2&4, hats on 8ths with swing */
+    if(exData.piano&&jazzTracks.drums){
+      const spb=secPerBeat();
+      const hatStep=Math.floor(b*2);
+      if(hatStep!==lastHatStep&&b>=hatStep/2){
+        const swing=(hatStep%2===1)?spb*0.12:0;
+        const when=nextBeatTime+swing;
+        const beatInBar=Math.floor(b)%4;
+        if(hatStep%2===0){
+          if(beatInBar===0||beatInBar===2) drumKick(when,0.9);
+          else drumSnare(when,0.7);
+        }
+        drumHat(when,hatStep%2===0?0.35:0.5,false);
+        lastHatStep=hatStep;
+      }
+    }
     nextBeatTime+=0.025;
   }
 }
@@ -1114,11 +1213,19 @@ function rafLoop(){
   }
   rafId=requestAnimationFrame(rafLoop);
 }
-function startPlayback(){
-  initAudio(); if(!exData) return;
+let isStarting=false;
+async function startPlayback(){
+  initAudio(); if(!exData||isStarting) return;
+  /* Wait for the sampled piano so every key sounds natural (no synth/sample mix) */
+  if(exData.piano&&exData.piano.length){
+    isStarting=true;
+    try{ await preloadPiano(exData.piano.map(p=>p.midi)); }catch(e){}
+    isStarting=false;
+    if(!exData) return;
+  }
   isPlaying=true; $("playBtn").textContent="⏸";
   startCtxTime=actx.currentTime+0.08; startBeat=seekBeat;
-  nextIdx=notesFromBeat(seekBeat); nextPianoIdx=pianoFromBeat(seekBeat); nextBeatTime=startCtxTime; lastMetroBeat=-1;
+  nextIdx=notesFromBeat(seekBeat); nextPianoIdx=pianoFromBeat(seekBeat); nextBeatTime=startCtxTime; lastMetroBeat=-1; lastHatStep=-1;
   if(countIn){
     const spb=secPerBeat();
     for(let i=0;i<BEATS_PER_BAR;i++) click(startCtxTime+i*spb,i===0);
@@ -1512,9 +1619,9 @@ function renderCurriculum(){
   }).join("");
   $("curriculum").querySelectorAll("button[data-mod]").forEach(b=>b.addEventListener("click",()=>{
     const m=LEVELS[currentLevel].modules[+b.dataset.mod];
-    if(m.a&&m.a.tool){ switchTool(m.a.tool); document.getElementById("tool-"+m.a.tool).scrollIntoView({behavior:"smooth",block:"start"}); }
-    if(m.a&&m.a.scroll){ document.querySelector(".layout").scrollIntoView({behavior:"smooth"}); }
-    if(typeof m.ex==="number"){ stopPlayback(); loadExercise(m.ex); document.querySelector(".layout").scrollIntoView({behavior:"smooth"}); }
+    if(m.a&&m.a.tool){ switchScreen("tools"); switchTool(m.a.tool); document.getElementById("tool-"+m.a.tool).scrollIntoView({behavior:"smooth",block:"start"}); }
+    if(m.a&&m.a.scroll){ switchScreen("lab"); document.querySelector(".layout").scrollIntoView({behavior:"smooth"}); }
+    if(typeof m.ex==="number"){ switchScreen("lab"); stopPlayback(); loadExercise(m.ex); document.querySelector(".layout").scrollIntoView({behavior:"smooth"}); }
   }));
 }
 function setLevel(lv){
@@ -1541,7 +1648,31 @@ function renderJazz(){
 function playJazz(){
   const idx=+($("jazzSong").value||0);
   const exIdx=EXERCISES.findIndex(e=>e.id===JAZZ_SONGS[idx].id);
-  if(exIdx>=0){ stopPlayback(); loadExercise(exIdx); startPlayback(); document.querySelector(".layout").scrollIntoView({behavior:"smooth"}); }
+  if(exIdx>=0){ switchScreen("lab"); stopPlayback(); loadExercise(exIdx); startPlayback(); document.querySelector(".layout").scrollIntoView({behavior:"smooth"}); }
+}
+
+/* ================= SCREENS (Lab vs Tools) ================= */
+function switchScreen(name){
+  const tools=name==="tools";
+  $("screenTools").classList.toggle("on",tools);
+  $("labHero").style.display=tools?"none":"";
+  $("labMain").style.display=tools?"none":"";
+  $("curriculumHead").style.display=tools?"none":"";
+  $("curriculum").style.display=tools?"none":"";
+  $("navLab").classList.toggle("on",!tools);
+  $("navTools").classList.toggle("on",tools);
+  try{ history.replaceState(null,"",tools?"#tools":"#lab"); }catch(e){}
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+window.switchScreen=switchScreen;
+function syncTrackToggles(){
+  document.querySelectorAll(".track-toggle").forEach(b=>{
+    const on=!!jazzTracks[b.dataset.track];
+    b.classList.toggle("on",on); b.classList.toggle("off",!on);
+  });
+  document.querySelectorAll("#jazzTracks .chip").forEach(c=>c.classList.toggle("on",!!jazzTracks[c.dataset.t]));
+  const tb=$("trackBass"); if(tb) tb.classList.toggle("on",!!jazzTracks.bass);
+  const td=$("trackDrums"); if(td) td.classList.toggle("on",!!jazzTracks.drums);
 }
 
 /* ================= TOOL TABS ================= */
@@ -1576,8 +1707,11 @@ function init(){
     renderExerciseList();
   }));
   document.querySelectorAll(".level-card").forEach(c=>c.addEventListener("click",()=>setLevel(c.dataset.level)));
+  $("navLab").addEventListener("click",()=>switchScreen("lab"));
+  $("navTools").addEventListener("click",()=>switchScreen("tools"));
   renderExerciseList(); loadExercise(0); updateProgressLoop();
   setLevel(currentLevel);
+  if(location.hash==="#tools") switchScreen("tools");
   $("playBtn").addEventListener("click",togglePlay);
   $("stopBtn").addEventListener("click",stopPlayback);
   $("rewBtn").addEventListener("click",()=>{ if(isPlaying) restartFrom(0); else { seekBeat=0; updateProgress(0); } });
@@ -1587,6 +1721,12 @@ function init(){
   $("metroBtn").addEventListener("click",()=>{ metroOn=!metroOn; $("metroBtn").classList.toggle("on",metroOn); });
   $("countBtn").addEventListener("click",()=>{ countIn=!countIn; $("countBtn").classList.toggle("on",countIn); });
   $("trackGuide").addEventListener("click",()=>{ guideOn=!guideOn; $("trackGuide").classList.toggle("on",guideOn); });
+  $("trackBass").addEventListener("click",()=>{ jazzTracks.bass=!jazzTracks.bass; $("trackBass").classList.toggle("on",jazzTracks.bass); syncTrackToggles(); });
+  $("trackDrums").addEventListener("click",()=>{ jazzTracks.drums=!jazzTracks.drums; $("trackDrums").classList.toggle("on",jazzTracks.drums); syncTrackToggles(); });
+  document.querySelectorAll(".track-toggle").forEach(b=>b.addEventListener("click",()=>{
+    const t=b.dataset.track; jazzTracks[t]=!jazzTracks[t]; syncTrackToggles();
+  }));
+  $("drumVol").addEventListener("input",e=>{ if(drumGainNode) drumGainNode.gain.value=e.target.value/100; });
   $("tempoDown").addEventListener("click",()=>setTempo(tempo-5));
   $("tempoUp").addEventListener("click",()=>setTempo(tempo+5));
   $("speedDown").addEventListener("click",()=>setSpeed(speed-0.25));
@@ -1655,7 +1795,7 @@ function init(){
   $("progStop").addEventListener("click",stopProg);
   $("jazzSong").addEventListener("change",renderJazz);
   document.querySelectorAll("#jazzTracks .chip").forEach(c=>c.addEventListener("click",()=>{
-    const t=c.dataset.t; jazzTracks[t]=!jazzTracks[t]; c.classList.toggle("on",jazzTracks[t]);
+    const t=c.dataset.t; jazzTracks[t]=!jazzTracks[t]; syncTrackToggles();
   }));
   $("jazzPlay").addEventListener("click",playJazz);
   $("jazzStop").addEventListener("click",stopPlayback);
