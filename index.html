@@ -1,74 +1,1672 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KebabKilla - Home</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KebabKilla Theory Lab — Bass Tab Player &amp; Music Theory Tools</title>
+<meta name="description" content="Songsterr-style bass tab player plus scale, chord, interval and ear-training tools for learning music theory on bass guitar.">
+<style>
+:root{
+  --ink:#1a1a1a; --chrome:#141414; --chrome2:#232323; --line:#d9d9d9;
+  --accent:#ff8c1a; --accent2:#e56b00; --paper:#f8f4ea; --paper-line:#3a3a3a;
+  --muted:#6b7280; --card:#ffffff; --bg:#e9e9e9; --good:#16a34a; --bad:#dc2626;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+a{color:inherit}
+button{font-family:inherit;cursor:pointer}
+select,input{font-family:inherit}
+
+/* ---------- Top bar (Songsterr-style dark chrome) ---------- */
+.topbar{position:sticky;top:0;z-index:50;background:var(--chrome);color:#f3f4f6;display:flex;align-items:center;gap:16px;padding:10px 18px;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-mark{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#ff5e3a);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;box-shadow:0 2px 8px rgba(255,140,26,.45)}
+.logo b{font-size:18px;letter-spacing:.2px}
+.logo .lab{font-size:10px;font-weight:800;letter-spacing:1.5px;background:var(--accent);color:#111;border-radius:4px;padding:2px 6px;margin-left:2px}
+.topnav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.topnav a{color:#d1d5db;text-decoration:none;font-size:14px;padding:7px 12px;border-radius:7px}
+.topnav a:hover{background:var(--chrome2);color:#fff}
+.topnav a.active{background:var(--accent);color:#111;font-weight:700}
+.topnav a.active:hover{background:var(--accent2);color:#fff}
+
+/* ---------- Song header ---------- */
+.songbar{background:var(--card);border-bottom:1px solid var(--line)}
+.songbar-inner{max-width:1280px;margin:0 auto;padding:16px 18px;display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.songbar h1{margin:0;font-size:26px;line-height:1.15}
+.songbar .sub{color:var(--muted);margin-top:4px;font-size:14px}
+.meta-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{background:#f3f4f6;border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12.5px;color:#374151}
+.pill b{color:var(--ink)}
+.song-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600}
+.btn:hover{background:#f3f4f6}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#111}
+.btn.primary:hover{background:var(--accent2);color:#fff}
+.btn.dark{background:var(--chrome);color:#fff;border-color:var(--chrome)}
+.btn.dark:hover{background:var(--chrome2)}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:1280px;margin:0 auto;padding:18px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+@media(max-width:1020px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.card + .card{margin-top:18px}
+.card-h{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card-h h2,.card-h h3{margin:0;font-size:15px}
+.card-h .hint{color:var(--muted);font-size:12.5px}
+.card-b{padding:16px}
+
+/* ---------- Player toolbar ---------- */
+.player-toolbar{background:var(--chrome);color:#e5e7eb;display:flex;align-items:center;gap:10px;padding:8px 12px;flex-wrap:wrap}
+.seg{display:flex;background:#2b2b2b;border-radius:8px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;color:#d1d5db;padding:6px 12px;border-radius:6px;font-size:13px;font-weight:600}
+.seg button.on{background:var(--accent);color:#111}
+.tracktabs{display:flex;gap:4px}
+.tracktabs button{border:1px solid #3a3a3a;background:#1f1f1f;color:#d1d5db;border-radius:7px;padding:6px 12px;font-size:13px;font-weight:600}
+.tracktabs button.on{background:#fff;color:#111;border-color:#fff}
+.tracktabs button:disabled{opacity:.45;cursor:not-allowed}
+.player-toolbar label{font-size:12px;color:#9ca3af;display:flex;align-items:center;gap:6px}
+.player-toolbar select{background:#2b2b2b;color:#fff;border:1px solid #3a3a3a;border-radius:7px;padding:6px 8px;font-size:13px}
+.player-toolbar input[type=range]{accent-color:var(--accent)}
+
+/* ---------- Tab sheet ---------- */
+.tab-viewport{background:var(--paper);overflow-x:auto;overflow-y:hidden;position:relative}
+.tab-sheet{position:relative;min-width:100%;padding:26px 18px 30px 64px;font-family:"Courier New",ui-monospace,monospace;user-select:none}
+.tab-string-label{position:absolute;left:14px;width:34px;text-align:right;font-weight:800;color:#111;font-size:15px}
+.tab-line{position:absolute;left:56px;right:10px;height:2px;background:var(--paper-line);border-radius:2px}
+.tab-barline{position:absolute;top:14px;bottom:14px;width:2px;background:#111;opacity:.85}
+.tab-note{position:absolute;transform:translate(-50%,-50%);background:transparent;border:0;padding:0 2px;font-family:inherit;font-weight:700;font-size:15px;color:#111;border-radius:4px;line-height:1;cursor:pointer;z-index:3}
+.tab-note:hover{background:#ffe1bd}
+.tab-note.now{background:var(--accent);color:#fff;box-shadow:0 0 0 3px rgba(255,140,26,.35)}
+.tab-note.done{color:#9a8f7a}
+.tab-note .ord{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:10px;color:#b45309;font-weight:800}
+.playhead{position:absolute;top:8px;bottom:8px;width:3px;background:var(--accent);border-radius:2px;z-index:5;pointer-events:none;box-shadow:0 0 8px rgba(255,140,26,.7)}
+.playhead::before{content:"";position:absolute;top:-6px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top:8px solid var(--accent)}
+.loop-region{position:absolute;top:8px;bottom:8px;background:rgba(255,140,26,.16);border-left:2px solid var(--accent);border-right:2px solid var(--accent);z-index:2;pointer-events:none}
+.loop-region.drag{background:rgba(255,140,26,.28)}
+.tab-measure-num{position:absolute;top:-2px;font-size:11px;color:#8a7f68;font-weight:700}
+.tab-hint{padding:8px 14px;background:#efe8d8;color:#6b5f45;font-size:12.5px;border-top:1px solid #e3d9c2}
+
+/* ---------- Progress + transport ---------- */
+.progress-wrap{padding:10px 14px 4px;background:#fff}
+.progress-track{position:relative;height:10px;background:#e5e7eb;border-radius:999px;cursor:pointer}
+.progress-fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:999px;width:0%}
+.progress-loop{position:absolute;top:-3px;bottom:-3px;background:rgba(255,140,26,.25);border:1px solid var(--accent);border-radius:4px;display:none}
+.time-row{display:flex;justify-content:space-between;color:var(--muted);font-size:12.5px;margin-top:6px;font-variant-numeric:tabular-nums}
+.transport{background:var(--chrome);color:#fff;display:flex;align-items:center;gap:8px;padding:10px 12px;flex-wrap:wrap}
+.tbtn{width:42px;height:42px;border-radius:50%;border:1px solid #3a3a3a;background:#2b2b2b;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center}
+.tbtn:hover{background:#3a3a3a}
+.tbtn.play{width:54px;height:54px;background:var(--accent);border-color:var(--accent);color:#111;font-size:22px}
+.tbtn.play:hover{background:var(--accent2);color:#fff}
+.tbtn.on{background:var(--accent);color:#111;border-color:var(--accent)}
+.tgroup{display:flex;align-items:center;gap:6px;background:#1f1f1f;border:1px solid #333;border-radius:10px;padding:5px 10px}
+.tgroup label{font-size:11px;color:#9ca3af;font-weight:700;letter-spacing:.5px}
+.tgroup .val{font-weight:800;min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+.tgroup button{border:0;background:#333;color:#fff;border-radius:6px;width:26px;height:26px;font-weight:800}
+.tgroup button:hover{background:#444}
+.transport input[type=range]{accent-color:var(--accent);width:90px}
+.now-playing{display:flex;align-items:center;gap:14px;padding:12px 16px;background:#fff;border-top:1px solid var(--line);flex-wrap:wrap}
+.now-note{font-size:34px;font-weight:900;line-height:1}
+.now-note small{display:block;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1px}
+.now-info{color:#374151;font-size:14px}
+.now-info b{color:var(--ink)}
+
+/* ---------- Sidebar ---------- */
+.side-list{display:flex;flex-direction:column;gap:8px}
+.ex-item{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:#fff;text-align:left;width:100%}
+.ex-item:hover{border-color:var(--accent)}
+.ex-item.on{border-color:var(--accent);background:#fff7ed}
+.ex-item .n{width:28px;height:28px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:none}
+.ex-item.on .n{background:var(--accent);color:#111}
+.ex-item b{display:block;font-size:14px}
+.ex-item span{font-size:12px;color:var(--muted)}
+.track-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.track-row:last-child{border-bottom:0}
+.track-row .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex:none}
+.track-row b{font-size:14px}
+.track-row small{display:block;color:var(--muted);font-size:12px}
+.track-row input[type=range]{margin-left:auto;width:90px;accent-color:var(--accent)}
+.kbd{background:#f3f4f6;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:12px;font-family:ui-monospace,monospace}
+.shortcut-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;color:#374151}
+
+/* ---------- Fretboard / piano (shared) ---------- */
+.fretboard-wrap{overflow-x:auto;padding:6px 2px}
+.fretboard{display:grid;min-width:640px;border:1px solid #444;border-radius:6px;overflow:hidden;background:#2b2118}
+.fb-row{display:contents}
+.fb-cell{position:relative;height:44px;border-right:1px solid rgba(255,255,255,.14);border-bottom:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;color:#d6c9b8;font-size:11px;cursor:pointer;background:linear-gradient(180deg,#3a2c1e,#2b2118)}
+.fb-cell:hover{background:#4a3826}
+.fb-cell .nl{font-weight:800;font-size:12px}
+.fb-cell.root{background:radial-gradient(circle at center,#ff8c1a 0 34%,transparent 35%)}
+.fb-cell.root .nl{color:#fff;text-shadow:0 1px 3px #000}
+.fb-cell.tone{background:radial-gradient(circle at center,#3b82f6 0 30%,transparent 31%)}
+.fb-cell.tone .nl{color:#fff}
+.fb-cell.now{outline:3px solid #fff;outline-offset:-3px;z-index:2}
+.fb-cell .ord{position:absolute;top:2px;right:3px;font-size:9px;font-weight:900;color:#fde68a}
+.fb-nut{border-right:5px solid #e7e5e4 !important}
+.fb-fret-nums{display:grid;min-width:640px}
+.fb-fret-nums span{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:700}
+.piano{display:flex;min-width:560px;height:130px;border:1px solid #333;border-radius:6px;overflow:hidden;background:#111}
+.key{position:relative;flex:1;border-right:1px solid #333;background:#fff;cursor:pointer;padding:0}
+.key.black{background:#111;flex:.62;margin:0 -4px;z-index:2;height:62%;border-radius:0 0 4px 4px}
+.key.on{background:var(--accent) !important}
+.key.root{background:#ff8c1a !important}
+.key.tone{background:#93c5fd !important}
+.key span{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:#666}
+.key.black span{color:#aaa;bottom:3px}
+.key.on span,.key.root span{color:#111}
+
+/* ---------- Tools ---------- */
+.tools-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:26px 0 12px}
+.tools-head h2{margin:0;font-size:22px}
+.tool-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tool-tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 15px;font-weight:700;font-size:13.5px}
+.tool-tabs button.on{background:var(--chrome);color:#fff;border-color:var(--chrome)}
+.tool-panel{display:none}
+.tool-panel.on{display:block}
+.tool-grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:900px){.tool-grid{grid-template-columns:1fr}}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:800;letter-spacing:.6px;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+.field select,.field input[type=text]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff}
+.note-btns{display:flex;flex-wrap:wrap;gap:5px}
+.note-btns button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 9px;font-weight:800;font-size:13px;min-width:38px}
+.note-btns button.on{background:var(--accent);border-color:var(--accent);color:#111}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 11px;font-size:13px;font-weight:600}
+.chip.on{background:var(--chrome);color:#fff;border-color:var(--chrome)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.note-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.note-table th,.note-table td{border:1px solid var(--line);padding:7px 9px;text-align:left}
+.note-table th{background:#f9fafb;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.note-table tr:hover td{background:#fff7ed}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.quiz-opts button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:12px;font-weight:800;font-size:15px}
+.quiz-opts button:hover{border-color:var(--accent)}
+.quiz-opts button.correct{background:#dcfce7;border-color:var(--good);color:#166534}
+.quiz-opts button.wrong{background:#fee2e2;border-color:var(--bad);color:#991b1b}
+.score-row{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:#374151}
+.score-row b{font-size:18px;color:var(--ink)}
+.feedback{border-radius:9px;padding:10px 12px;font-size:14px;margin-top:10px;display:none}
+.feedback.good{display:block;background:#dcfce7;color:#166534}
+.feedback.bad{display:block;background:#fee2e2;color:#991b1b}
+.theory-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:12px 14px;font-size:14px;line-height:1.55;color:#7c2d12}
+.theory-box b{color:#9a3412}
+.muted{color:var(--muted);font-size:13px;line-height:1.55}
+.big-play{font-size:15px;padding:11px 18px}
+
+/* ---------- Lessons ---------- */
+.lesson-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.lesson{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.lesson .ico{font-size:26px}
+.lesson h3{margin:8px 0 6px;font-size:16px}
+.lesson p{margin:0;color:#4b5563;font-size:13.5px;line-height:1.55}
+.lesson a{font-weight:700;color:var(--accent2);text-decoration:none;font-size:13px}
+.lesson a:hover{text-decoration:underline}
+
+footer{background:var(--chrome);color:#9ca3af;margin-top:30px}
+footer .wrap{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:space-between;font-size:13px}
+footer a{color:#e5e7eb;text-decoration:none}
+footer a:hover{color:var(--accent)}
+.view-pane{display:none}
+.view-pane.on{display:block}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--chrome);color:#fff;padding:10px 16px;border-radius:9px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- Level picker & curriculum ---------- */
+.level-hero{margin-bottom:18px}
+.level-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.level-card{border:2px solid var(--line);border-radius:var(--radius);padding:18px;background:#fff;text-align:left;transition:.2s}
+.level-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.level-card.on{border-color:var(--accent);background:#fff7ed;box-shadow:0 8px 24px rgba(255,140,26,.18)}
+.level-card .ico{font-size:30px}
+.level-card h3{margin:8px 0 4px;font-size:19px}
+.level-card .tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:1px;background:#f3f4f6;border-radius:999px;padding:3px 9px;color:#374151}
+.level-card.on .tag{background:var(--accent);color:#111}
+.level-card p{margin:8px 0;color:#4b5563;font-size:13.5px;line-height:1.55}
+.level-card ul{margin:8px 0 0;padding-left:18px;color:#4b5563;font-size:13px;line-height:1.6}
+.level-card .start{margin-top:12px;font-weight:800;color:var(--accent2);font-size:14px}
+.curriculum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.module{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.module .num{width:28px;height:28px;border-radius:50%;background:var(--chrome);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.module h3{margin:10px 0 6px;font-size:16px}
+.module p{margin:0;color:#4b5563;font-size:13.5px;line-height:1.6}
+.module .facts{margin:10px 0;padding:10px 12px;background:#f9fafb;border:1px solid var(--line);border-radius:8px;font-size:13px;line-height:1.6;color:#374151}
+.module .facts b{color:var(--ink)}
+.module .btn-row{margin-top:10px}
+.piano-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;background:#f3f4f6;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:#374151}
+.piano-badge .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af}
+.piano-badge.ready .dot{background:var(--good)}
+.piano-badge.loading .dot{background:var(--accent)}
+.chord-chart{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chord-chip{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 11px;font-size:13px;font-weight:700}
+.chord-chip.now{background:var(--accent);border-color:var(--accent);color:#111}
+.chord-chip small{display:block;font-weight:600;color:var(--muted);font-size:11px}
+.chord-chip.now small{color:#5b3a00}
+.level-badge{font-size:10.5px;font-weight:800;letter-spacing:.6px;border-radius:999px;padding:2px 8px;background:#f3f4f6;color:#4b5563;border:1px solid var(--line)}
+.level-badge.beginner{background:#dcfce7;border-color:#86efac;color:#166534}
+.level-badge.intermediate{background:#dbeafe;border-color:#93c5fd;color:#1e40af}
+.level-badge.master{background:#ede9fe;border-color:#c4b5fd;color:#5b21b6}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.filter-row button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700}
+.filter-row button.on{background:var(--chrome);color:#fff;border-color:var(--chrome)}
+</style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
-    <!-- Main Container -->
-    <div class="min-h-screen flex flex-col items-center justify-center px-4 py-10">
-        
-        <!-- Welcome Card -->
-        <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 md:p-12 max-w-2xl w-full text-center border border-white/20 shadow-2xl">
-            
-            <!-- Logo/Avatar -->
-            <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
-                <span class="text-4xl">🎸</span>
-            </div>
-            
-            <!-- Title -->
-            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
-                Welcome to <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">KebabKilla</span>
-            </h1>
-            
-            <!-- Subtitle -->
-            <p class="text-gray-300 text-lg mb-10">
-                Learn &amp; teach music theory on bass — pick a tool below
-            </p>
-            
-            <!-- Navigation Buttons -->
-            <div class="space-y-4">
+<body>
 
-                <!-- Theory Lab (featured) -->
-                <a href="theory.html" class="block w-full py-5 px-6 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold text-xl rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
-                    🎼 Theory Lab — Songsterr-style Tab Player &amp; Theory Tools
-                </a>
-                <p class="text-gray-400 text-sm -mt-2">Tab player with loop &amp; metronome · Scale Explorer · Chord Builder · Interval Trainer · Ear Quiz · Fretboard Trainer · Progression Player</p>
+<header class="topbar">
+  <a class="logo" href="index.html"><span class="logo-mark">🎸</span><span><b>KebabKilla</b><span class="lab">THEORY LAB</span></span></a>
+  <nav class="topnav">
+    <a href="index.html" class="active">Theory Lab</a>
+    <a href="practice.html">Altered Dominants</a>
+    <a href="practice2.html">Fingers</a>
+    <a href="practice3.html">Scales</a>
+    <a href="practice4.html">Triads</a>
+    <a href="https://github.com/Kebabkilla/kebabkilla.github.io" target="_blank" rel="noopener">GitHub</a>
+  </nav>
+</header>
 
-                <!-- Practice Page Button -->
-                <a href="practice.html" class="block w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
-                    🎯 Practice Altered Dominants
-                </a>
-                
-                <!-- Practice 2 Button -->
-                <a href="practice2.html" class="block w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
-                    🚀 Practice Finger independence &amp; flying fingers
-                </a>
-
-                <!-- Practice 3 Button  -->
-                <a href="practice3.html" class="block w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
-                    ⚖️ Practice Major and Minor scales
-                </a>
-
-                 <!-- Practice 4 Button  -->
-                <a href="practice4.html" class="block w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
-                    🔺 Practice Triads
-                </a>
-                
-            </div>
-            
-            <!-- Help Text -->
-            <p class="text-gray-400 text-sm mt-8">
-                ℹ️ New here? Start with the <a href="theory.html" class="text-orange-300 underline">Theory Lab</a> — it teaches scales, chords &amp; intervals with a Songsterr-style player.
-            </p>
-        </div>
-        
-        <!-- Footer -->
-        <p class="text-gray-500 mt-8 text-sm">
-            kebabkilla.github.io
-        </p>
+<div class="songbar">
+  <div class="songbar-inner">
+    <div>
+      <h1 id="songTitle">KebabKilla Theory Lab — Bass Tab Player</h1>
+      <div class="sub" id="songSub">Learn &amp; teach music theory on bass · Songsterr-style player · Built for kebabkilla.github.io</div>
+      <div class="meta-pills" id="songPills"></div>
     </div>
+    <div class="song-actions">
+      <button class="btn" id="favBtn" type="button">♡ Favourite</button>
+      <button class="btn" id="shareBtn" type="button">↗ Share</button>
+      <button class="btn dark" id="printBtn" type="button">🖨 Print tab</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <!-- ============ LEVEL PICKER ============ -->
+  <section class="card level-hero" aria-label="Choose your level">
+    <div class="card-h"><h2>🎓 What do you want to learn?</h2><span class="hint">Pick a level — your lessons, tools and exercises will organise themselves around it. Saved on this device.</span><span class="piano-badge" id="pianoBadge"><span class="dot"></span><span id="pianoBadgeText">🎹 Piano: synth (tap Play to load sampled piano)</span></span></div>
+    <div class="card-b">
+      <div class="level-grid" id="levelGrid">
+        <button class="level-card" data-level="beginner" type="button">
+          <div class="ico">🌱</div><span class="tag">LEVEL 1</span>
+          <h3>Beginner</h3>
+          <p>Start here. Notes, your first scales and chords, and how to keep time — everything you need to play your first bass lines.</p>
+          <ul><li>Notes &amp; the fretboard</li><li>Major &amp; natural minor scales</li><li>Major/minor triads</li><li>Perfect intervals &amp; rhythm</li><li>I–V–vi–IV</li></ul>
+          <div class="start">Start as Beginner →</div>
+        </button>
+        <button class="level-card" data-level="intermediate" type="button">
+          <div class="ico">🎸</div><span class="tag">LEVEL 2</span>
+          <h3>Intermediate</h3>
+          <p>Modes, 7th chords and the jazz ii–V–I. Learn to sound musical in any key and train your ears.</p>
+          <ul><li>Modes (Dorian, Mixolydian…)</li><li>Pentatonic &amp; blues scales</li><li>7th chords &amp; inversions</li><li>ii–V–I</li><li>Ear training</li></ul>
+          <div class="start">Start as Intermediate →</div>
+        </button>
+        <button class="level-card" data-level="master" type="button">
+          <div class="ico">🎓</div><span class="tag">LEVEL 3</span>
+          <h3>Master</h3>
+          <p>Altered dominants, extensions, walking bass and full jazz standards with a real piano comping underneath you.</p>
+          <ul><li>Melodic minor &amp; 7alt</li><li>9 / 11 / 13 extensions</li><li>Diminished &amp; augmented</li><li>Walking bass</li><li>Jazz play-along</li></ul>
+          <div class="start">Start as Master →</div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <!-- ============ PLAYER ============ -->
+    <section class="card" aria-label="Tab player">
+      <div class="player-toolbar">
+        <div class="seg" id="viewSeg" role="tablist" aria-label="View">
+          <button data-view="tabs" class="on" type="button">Tabs</button>
+          <button data-view="fretboard" type="button">Fretboard</button>
+          <button data-view="piano" type="button">Piano</button>
+          <button data-view="notes" type="button">Notes</button>
+        </div>
+        <div class="tracktabs" aria-label="Tracks">
+          <button class="on" type="button" id="trackBass">🎸 Bass</button>
+          <button type="button" id="trackGuide" title="Plays the root an octave up as a piano guide">🎹 Guide</button>
+          <button type="button" disabled title="This lab is bass-only">🥁 Drums</button>
+          <button type="button" disabled title="This lab is bass-only">🎤 Vocals</button>
+        </div>
+        <label>Zoom <input type="range" id="zoomRange" min="44" max="120" value="72"></label>
+        <label>Tuning
+          <select id="tuningSel">
+            <option value="standard">E A D G (Standard)</option>
+            <option value="dropD">Drop D</option>
+            <option value="eb">E♭ Standard</option>
+            <option value="dstd">D Standard</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="view-pane on" id="pane-tabs">
+        <div class="tab-viewport" id="tabViewport">
+          <div class="tab-sheet" id="tabSheet"></div>
+        </div>
+        <div class="tab-hint">💡 Click the tab to seek · Drag across the tab to select a loop region · Double-click to clear the loop · Click any number to hear that note.</div>
+      </div>
+      <div class="view-pane" id="pane-fretboard"><div class="card-b"><div class="fretboard-wrap" id="playerFretboard"></div><p class="muted">Numbers show the playing order. The white outline follows the current note.</p></div></div>
+      <div class="view-pane" id="pane-piano"><div class="card-b"><div class="fretboard-wrap" id="playerPiano"></div><p class="muted">Piano view of the same exercise — handy for teaching note names and intervals.</p></div></div>
+      <div class="view-pane" id="pane-notes"><div class="card-b" id="playerNotes"></div></div>
+
+      <div class="progress-wrap">
+        <div class="progress-track" id="progressTrack"><div class="progress-loop" id="progressLoop"></div><div class="progress-fill" id="progressFill"></div></div>
+        <div class="time-row"><span id="timeCur">0:00</span><span id="beatCur">Bar 1 · Beat 1</span><span id="timeTot">0:00</span></div>
+      </div>
+
+      <div class="transport">
+        <button class="tbtn" id="rewBtn" type="button" title="Back to start">⏮</button>
+        <button class="tbtn" id="backBtn" type="button" title="Back one bar">◀◀</button>
+        <button class="tbtn play" id="playBtn" type="button" title="Play / Pause (Space)">▶</button>
+        <button class="tbtn" id="stopBtn" type="button" title="Stop">⏹</button>
+        <button class="tbtn" id="fwdBtn" type="button" title="Forward one bar">▶▶</button>
+        <button class="tbtn" id="loopBtn" type="button" title="Loop (L)">🔁</button>
+        <button class="tbtn" id="metroBtn" type="button" title="Metronome (M)">🥁</button>
+        <button class="tbtn" id="countBtn" type="button" title="Count-in (one bar)">1·2·3·4</button>
+        <div class="tgroup"><label>TEMPO</label><button id="tempoDown" type="button">−</button><span class="val"><span id="tempoVal">80</span> BPM</span><button id="tempoUp" type="button">+</button></div>
+        <div class="tgroup"><label>SPEED</label><button id="speedDown" type="button">−</button><span class="val" id="speedVal">1.0×</span><button id="speedUp" type="button">+</button></div>
+        <div class="tgroup"><label>VOL</label><input type="range" id="volRange" min="0" max="100" value="80"></div>
+      </div>
+
+      <div class="now-playing">
+        <div class="now-note"><small>NOW PLAYING</small><span id="nowNote">—</span></div>
+        <div class="now-info" id="nowInfo">Pick an exercise on the right, then press <b>Play</b>. Space = play/pause.</div>
+      </div>
+    </section>
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside>
+      <div class="card">
+        <div class="card-h"><h3>🎼 Exercises in this tab</h3><span class="hint">click to load</span></div>
+        <div class="card-b">
+          <div class="filter-row" id="exFilter">
+            <button data-f="all" class="on" type="button">All</button>
+            <button data-f="Beginner" type="button">🌱 Beginner</button>
+            <button data-f="Intermediate" type="button">🎸 Intermediate</button>
+            <button data-f="Master" type="button">🎓 Master</button>
+          </div>
+          <div class="side-list" id="exerciseList"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>🎚 Tracks</h3></div>
+        <div class="card-b">
+          <div class="track-row"><span class="dot"></span><div><b>Bass</b><small>Main tab track</small></div><input type="range" id="bassVol" min="0" max="100" value="85" aria-label="Bass volume"></div>
+          <div class="track-row"><span class="dot" style="background:#3b82f6"></span><div><b>Piano guide</b><small>Root, octave up (toggle above)</small></div><input type="range" id="guideVol" min="0" max="100" value="45" aria-label="Guide volume"></div>
+          <div class="track-row"><span class="dot" style="background:#9ca3af"></span><div><b>Metronome</b><small>Click track (toggle above)</small></div><input type="range" id="metroVol" min="0" max="100" value="60" aria-label="Metronome volume"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>📖 Theory for this exercise</h3></div>
+        <div class="card-b"><div class="theory-box" id="exerciseTheory"></div><div id="exerciseNotes" style="margin-top:10px"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>⌨ Shortcuts</h3></div>
+        <div class="card-b">
+          <div class="shortcut-row"><span>Play / Pause</span><span class="kbd">Space</span></div>
+          <div class="shortcut-row"><span>Stop</span><span class="kbd">S</span></div>
+          <div class="shortcut-row"><span>Loop</span><span class="kbd">L</span></div>
+          <div class="shortcut-row"><span>Metronome</span><span class="kbd">M</span></div>
+          <div class="shortcut-row"><span>Tempo + / −</span><span><span class="kbd">↑</span> <span class="kbd">↓</span></span></div>
+          <div class="shortcut-row"><span>Back / Forward 1 bar</span><span><span class="kbd">←</span> <span class="kbd">→</span></span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============ TOOLS ============ -->
+  <div class="tools-head">
+    <h2>🧰 Music Theory Tools</h2>
+    <div class="tool-tabs" id="toolTabs">
+      <button data-tool="scale" class="on" type="button">🎼 Scale Explorer</button>
+      <button data-tool="chord" type="button">🎹 Chord Builder</button>
+      <button data-tool="interval" type="button">📏 Interval Trainer</button>
+      <button data-tool="quiz" type="button">👂 Ear Quiz</button>
+      <button data-tool="fret" type="button">🎸 Fretboard Trainer</button>
+      <button data-tool="prog" type="button">🔁 Progression Player</button>
+      <button data-tool="jazz" type="button">🎷 Jazz Play-along</button>
+    </div>
+  </div>
+
+  <!-- Scale Explorer -->
+  <section class="card tool-panel on" id="tool-scale">
+    <div class="card-b tool-grid">
+      <div>
+        <div class="field"><label>Root note</label><div class="note-btns" id="scaleRoots"></div></div>
+        <div class="field"><label>Scale / mode</label><select id="scaleType"></select></div>
+        <div class="field"><label>Direction</label><div class="chip-row" id="scaleDir"><button class="chip on" data-dir="up" type="button">Up</button><button class="chip" data-dir="down" type="button">Down</button><button class="chip" data-dir="updown" type="button">Up + Down</button></div></div>
+        <div class="field"><label>Tempo</label><div class="tgroup" style="background:#f9fafb;border-color:var(--line);color:#111"><button id="scaleTempoDown" type="button" style="background:#e5e7eb;color:#111">−</button><span class="val"><span id="scaleTempoVal">72</span> BPM</span><button id="scaleTempoUp" type="button" style="background:#e5e7eb;color:#111">+</button></div></div>
+        <div class="btn-row"><button class="btn primary big-play" id="scalePlay" type="button">▶ Play scale</button><button class="btn" id="scaleStop" type="button">⏹ Stop</button></div>
+        <p class="muted" style="margin-top:12px">Orange = root (tonic). Blue = other scale tones. Click any fret to hear it. The table below spells the scale with degrees and intervals — great for teaching.</p>
+      </div>
+      <div>
+        <div class="fretboard-wrap" id="scaleFretboard"></div>
+        <div class="fretboard-wrap" id="scalePiano" style="margin-top:10px"></div>
+        <div id="scaleTable" style="margin-top:12px"></div>
+        <div class="theory-box" id="scaleTheory" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Chord Builder -->
+  <section class="card tool-panel" id="tool-chord">
+    <div class="card-b tool-grid">
+      <div>
+        <div class="field"><label>Root note</label><div class="note-btns" id="chordRoots"></div></div>
+        <div class="field"><label>Chord type</label><select id="chordType"></select></div>
+        <div class="field"><label>Voicing</label><div class="chip-row" id="chordInv"><button class="chip on" data-inv="0" type="button">Root position</button><button class="chip" data-inv="1" type="button">1st inv.</button><button class="chip" data-inv="2" type="button">2nd inv.</button></div></div>
+        <div class="btn-row"><button class="btn primary big-play" id="chordPlay" type="button">▶ Play arpeggio</button><button class="btn" id="chordStrum" type="button">🎹 Play chord</button></div>
+        <p class="muted" style="margin-top:12px">Colours = chord roles: <b style="color:#ea580c">root</b>, <b style="color:#2563eb">3rd</b>, <b style="color:#16a34a">5th</b>, <b style="color:#7c3aed">7th</b>, <b style="color:#ca8a04">extension</b>. Inversions move the lowest note — the bass note a bassist plays.</p>
+      </div>
+      <div>
+        <div class="fretboard-wrap" id="chordFretboard"></div>
+        <div class="fretboard-wrap" id="chordPiano" style="margin-top:10px"></div>
+        <div id="chordTable" style="margin-top:12px"></div>
+        <div class="theory-box" id="chordTheory" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interval Trainer -->
+  <section class="card tool-panel" id="tool-interval">
+    <div class="card-b tool-grid">
+      <div>
+        <div class="field"><label>Base note</label><div class="note-btns" id="intRoots"></div></div>
+        <div class="btn-row"><button class="btn primary big-play" id="intPlay" type="button">▶ Play interval</button><button class="btn" id="intPlaySlow" type="button">🐢 Slow</button></div>
+        <p class="muted" style="margin-top:12px">An interval is the distance between two notes. On bass, a perfect 5th is 7 frets up the same string (or 2 frets across to the next string). Click any interval below to hear it from the base note.</p>
+      </div>
+      <div>
+        <div id="intervalTable"></div>
+        <div class="theory-box" id="intervalTheory" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ear Quiz -->
+  <section class="card tool-panel" id="tool-quiz">
+    <div class="card-b tool-grid">
+      <div>
+        <div class="field"><label>Quiz mode</label><select id="quizMode"><option value="note">Identify the note</option><option value="interval">Identify the interval</option><option value="chord">Identify the chord</option></select></div>
+        <div class="field"><label>Difficulty</label><div class="chip-row" id="quizDiff"><button class="chip on" data-d="easy" type="button">Easy</button><button class="chip" data-d="medium" type="button">Medium</button><button class="chip" data-d="hard" type="button">Hard</button></div></div>
+        <div class="score-row"><span>Score <b id="quizScore">0</b></span><span>Streak <b id="quizStreak">0</b></span><span>Best <b id="quizBest">0</b></span><span>Round <b id="quizRound">0</b></span></div>
+        <div class="btn-row"><button class="btn primary big-play" id="quizNew" type="button">🎲 New question</button><button class="btn" id="quizReplay" type="button">🔊 Replay</button></div>
+        <div class="feedback" id="quizFeedback"></div>
+      </div>
+      <div>
+        <p class="muted">Press <b>New question</b>, listen, then pick an answer. Tip for teaching: sing the interval before answering — ears learn faster when the voice joins in.</p>
+        <div class="quiz-opts" id="quizOpts"></div>
+        <div class="theory-box" id="quizTheory" style="margin-top:14px">Ready when you are. Start with <b>Identify the note</b> on Easy.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fretboard Trainer -->
+  <section class="card tool-panel" id="tool-fret">
+    <div class="card-b tool-grid">
+      <div>
+        <div class="field"><label>Mode</label><div class="chip-row" id="fretMode"><button class="chip on" data-m="find" type="button">Find the note</button><button class="chip" data-m="name" type="button">Name that fret</button></div></div>
+        <div class="score-row"><span>Score <b id="fretScore">0</b></span><span>Streak <b id="fretStreak">0</b></span><span>Best <b id="fretBest">0</b></span></div>
+        <div class="btn-row"><button class="btn primary big-play" id="fretNew" type="button">🎲 New challenge</button></div>
+        <div class="feedback" id="fretFeedback"></div>
+        <p class="muted" style="margin-top:10px">In <b>Find the note</b>, click every place that note lives on the fretboard. In <b>Name that fret</b>, we highlight a fret — type the note name.</p>
+        <div class="field" id="fretAnswerField" style="display:none;margin-top:10px"><label>Your answer</label><div class="note-btns" id="fretAnswers"></div></div>
+      </div>
+      <div>
+        <div class="theory-box" id="fretPrompt" style="font-size:17px">Press <b>New challenge</b> to start.</div>
+        <div class="fretboard-wrap" id="trainerFretboard" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Progression Player -->
+  <section class="card tool-panel" id="tool-prog">
+    <div class="card-b tool-grid">
+      <div>
+        <div class="field"><label>Key</label><div class="note-btns" id="progKeys"></div></div>
+        <div class="field"><label>Progression</label><select id="progType">
+          <option value="pop">I – V – vi – IV (pop)</option>
+          <option value="jazz">ii – V – I (jazz)</option>
+          <option value="doowop">I – vi – IV – V (50s)</option>
+          <option value="blues">12-bar blues</option>
+          <option value="andalusian">i – ♭VII – ♭VI – V (Andalusian)</option>
+          <option value="minor">i – iv – V – i (minor)</option>
+        </select></div>
+        <div class="field"><label>Tempo</label><div class="tgroup" style="background:#f9fafb;border-color:var(--line);color:#111"><button id="progTempoDown" type="button" style="background:#e5e7eb;color:#111">−</button><span class="val"><span id="progTempoVal">90</span> BPM</span><button id="progTempoUp" type="button" style="background:#e5e7eb;color:#111">+</button></div></div>
+        <div class="btn-row"><button class="btn primary big-play" id="progPlay" type="button">▶ Play progression</button><button class="btn" id="progStop" type="button">⏹ Stop</button></div>
+        <p class="muted" style="margin-top:12px">Each chord gets one bar: bass plays root–5th–octave–5th, piano guide plays the chord tones. Loop it and practise walking over it.</p>
+      </div>
+      <div>
+        <div id="progChords" class="chip-row" style="margin-bottom:12px"></div>
+        <div class="fretboard-wrap" id="progFretboard"></div>
+        <div class="theory-box" id="progTheory" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Jazz Play-along -->
+  <section class="card tool-panel" id="tool-jazz">
+    <div class="card-b tool-grid">
+      <div>
+        <div class="field"><label>Song (simplified arrangement)</label><select id="jazzSong"></select></div>
+        <div class="field"><label>Backing</label>
+          <div class="chip-row" id="jazzTracks">
+            <button class="chip on" data-t="bass" type="button">🎸 Bass line (tab)</button>
+            <button class="chip on" data-t="comp" type="button">🎹 Piano comping</button>
+            <button class="chip on" data-t="melody" type="button">🎵 Piano melody</button>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn primary big-play" id="jazzPlay" type="button">▶ Play in tab player</button><button class="btn" id="jazzStop" type="button">⏹ Stop</button></div>
+        <p class="muted" style="margin-top:12px">The song loads into the Songsterr-style player above: <b>tab = your walking bass line</b>, <b>piano = comping + melody</b> (sampled grand piano). Slow it to 0.5×, loop one bar, and learn to play underneath a real jazz song. The chord chart highlights the current chord.</p>
+        <div class="theory-box" id="jazzTheory" style="margin-top:12px"></div>
+      </div>
+      <div>
+        <div class="chord-chart" id="jazzChart"></div>
+        <div class="fretboard-wrap" id="jazzFretboard"></div>
+        <p class="muted" style="margin-top:8px">Walking bass rule: <b>root → 3rd → 5th → approach note</b> (a chromatic or scale step into the next chord's root). That one pattern carries almost every jazz standard.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CURRICULUM ============ -->
+  <div class="tools-head"><h2 id="curriculumTitle">📚 Your learning path</h2><span class="muted" id="curriculumSub"></span></div>
+  <div class="curriculum-grid" id="curriculum"></div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>🎸 <b style="color:#fff">KebabKilla Theory Lab</b> · Learn &amp; teach music theory on bass</span>
+    <span><a href="index.html">Home</a> · <a href="practice.html">Altered Dominants</a> · <a href="practice2.html">Fingers</a> · <a href="practice3.html">Scales</a> · <a href="practice4.html">Triads</a></span>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================= THEORY DATA ================= */
+const NOTE_NAMES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const NOTE_NAMES_FLAT=["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+const pcName=(pc)=>NOTE_NAMES[((pc%12)+12)%12];
+const midiName=(m)=>NOTE_NAMES[((m%12)+12)%12]+(Math.floor(m/12)-1);
+
+/* String index convention (matches existing practice pages): 0=G 1=D 2=A 3=E (top→bottom on tab) */
+const TUNINGS={
+  standard:{label:"E A D G", openMidi:{0:43,1:38,2:33,3:28}, openFreq:{0:98.00,1:73.42,2:55.00,3:41.20}},
+  dropD:{label:"D A D G", openMidi:{0:43,1:38,2:33,3:26}, openFreq:{0:98.00,1:73.42,2:55.00,3:36.71}},
+  eb:{label:"E♭ A♭ D♭ G♭", openMidi:{0:42,1:37,2:32,3:27}, openFreq:{0:92.50,1:69.30,2:51.91,3:38.89}},
+  dstd:{label:"D G C F", openMidi:{0:41,1:36,2:31,3:26}, openFreq:{0:87.31,1:65.41,2:49.00,3:36.71}}
+};
+let tuningKey="standard";
+const tuning=()=>TUNINGS[tuningKey];
+const stringMidi=(s,f)=>tuning().openMidi[s]+f;
+const stringFreq=(s,f)=>tuning().openFreq[s]*Math.pow(2,f/12);
+const STRING_LABELS=()=>{const t=tuning();return [pcName(t.openMidi[0]),pcName(t.openMidi[1]),pcName(t.openMidi[2]),pcName(t.openMidi[3])];};
+
+const SCALES={
+  major:{name:"Major (Ionian)",iv:[0,2,4,5,7,9,11],deg:["1","2","3","4","5","6","7"],desc:"The major scale is the 'happy' reference scale. Pattern W-W-H-W-W-W-H. Every major key's notes come from here."},
+  naturalMinor:{name:"Natural Minor (Aeolian)",iv:[0,2,3,5,7,8,10],deg:["1","2","♭3","4","5","♭6","♭7"],desc:"The natural minor is the 'sad' scale: W-H-W-W-H-W-W. It is the relative minor of the major scale (A minor = C major notes)."},
+  harmonicMinor:{name:"Harmonic Minor",iv:[0,2,3,5,7,8,11],deg:["1","2","♭3","4","5","♭6","7"],desc:"Raising the 7th degree creates a leading tone that pulls strongly back to the tonic — the sound of classical minor and gypsy jazz."},
+  melodicMinor:{name:"Melodic Minor (Jazz)",iv:[0,2,3,5,7,9,11],deg:["1","2","♭3","4","5","6","7"],desc:"Raised 6th and 7th give a smooth, jazzy minor sound. This is the parent scale of altered dominants (7alt) — see the F7alt exercise!"},
+  dorian:{name:"Dorian",iv:[0,2,3,5,7,9,10],deg:["1","2","♭3","4","5","6","♭7"],desc:"Minor with a raised 6th — jazzy, funky, hopeful. The go-to mode over minor 7 chords."},
+  phrygian:{name:"Phrygian",iv:[0,1,3,5,7,8,10],deg:["1","♭2","♭3","4","5","♭6","♭7"],desc:"Dark and Spanish-sounding thanks to the ♭2. The Andalusian cadence (i–♭VII–♭VI–V) lives here."},
+  lydian:{name:"Lydian",iv:[0,2,4,6,7,9,11],deg:["1","2","3","♯4","5","6","7"],desc:"Major with a raised 4th (♯4) — dreamy and floating, like the theme from The Simpsons."},
+  mixolydian:{name:"Mixolydian",iv:[0,2,4,5,7,9,10],deg:["1","2","3","4","5","6","♭7"],desc:"Major with a ♭7 — bluesy and rock-ready. The classic dominant-7 sound."},
+  locrian:{name:"Locrian",iv:[0,1,3,5,6,8,10],deg:["1","♭2","♭3","4","♭5","♭6","♭7"],desc:"The darkest mode, built on the diminished chord. Rarely used as a standalone scale — mostly for theory completeness."},
+  majorPent:{name:"Major Pentatonic",iv:[0,2,4,7,9],deg:["1","2","3","5","6"],desc:"Five notes, zero wrong notes. The backbone of rock, pop and country melody."},
+  minorPent:{name:"Minor Pentatonic",iv:[0,3,5,7,10],deg:["1","♭3","4","5","♭7"],desc:"The blues scale's skeleton. Solo over any minor blues with confidence."},
+  blues:{name:"Blues Scale",iv:[0,3,5,6,7,10],deg:["1","♭3","4","♯4","5","♭7"],desc:"Minor pentatonic plus the ♯4 'blue note' — the gritty bend between the 4th and 5th."},
+  wholeTone:{name:"Whole Tone",iv:[0,2,4,6,8,10],deg:["1","2","3","♯4","♯5","♯6"],desc:"Six whole steps, no half steps — Debussy and dreamy film scores. Symmetrical: only two whole-tone scales exist."},
+  diminished:{name:"Diminished (Half-Whole)",iv:[0,1,3,4,6,7,9,10],deg:["1","♭2","♭3","3","♯4","5","6","♭7"],desc:"Alternating half/whole steps — the jazz diminished sound over dominant chords."},
+  chromatic:{name:"Chromatic",iv:[0,1,2,3,4,5,6,7,8,9,10,11],deg:["1","♭2","2","♭3","3","4","♯4","5","♭6","6","♭7","7"],desc:"All 12 notes. Useful for chromatic passing tones and finger-independence drills."}
+};
+const CHORDS={
+  maj:{name:"Major",iv:[0,4,7],roles:["root","3rd","5th"],desc:"Root + major 3rd + perfect 5th. Bright and stable — the sound of 'home' in a major key."},
+  min:{name:"Minor",iv:[0,3,7],roles:["root","♭3rd","5th"],desc:"Root + minor 3rd + perfect 5th. The 3rd is one semitone lower than major — that small change flips the whole mood."},
+  dim:{name:"Diminished",iv:[0,3,6],roles:["root","♭3rd","♭5th"],desc:"Minor 3rd + diminished 5th. Unstable and tense — it wants to resolve to a minor chord."},
+  aug:{name:"Augmented",iv:[0,4,8],roles:["root","3rd","♯5th"],desc:"Major 3rd + augmented 5th. Symmetrical and dreamy — divides the octave into three major 3rds."},
+  sus2:{name:"Sus2",iv:[0,2,7],roles:["root","2nd","5th"],desc:"The 2nd replaces the 3rd — open and suspended, common in rock and folk."},
+  sus4:{name:"Sus4",iv:[0,5,7],roles:["root","4th","5th"],desc:"The 4th replaces the 3rd — tense, waiting to resolve down to the 3rd."},
+  "7":{name:"Dominant 7",iv:[0,4,7,10],roles:["root","3rd","5th","♭7th"],desc:"Major triad + minor 7th. The blues/jazz workhorse — it pulls hard toward the tonic."},
+  maj7:{name:"Major 7",iv:[0,4,7,11],roles:["root","3rd","5th","7th"],desc:"Major triad + major 7th. Lush and jazzy — the sound of bossa nova and smooth jazz."},
+  m7:{name:"Minor 7",iv:[0,3,7,10],roles:["root","♭3rd","5th","♭7th"],desc:"Minor triad + minor 7th. The default minor jazz/funk chord — warm and sophisticated."},
+  mMaj7:{name:"Minor-Major 7",iv:[0,3,7,11],roles:["root","♭3rd","5th","7th"],desc:"Minor triad + major 7th. Bittersweet — used over melodic minor."},
+  m7b5:{name:"Half-Diminished (m7♭5)",iv:[0,3,6,10],roles:["root","♭3rd","♭5th","♭7th"],desc:"The ii chord in minor keys. Diminished triad plus a minor 7th."},
+  dim7:{name:"Diminished 7",iv:[0,3,6,9],roles:["root","♭3rd","♭5th","♭♭7th"],desc:"Fully symmetrical — any note can be the root. A passing chord that connects everything."},
+  aug7:{name:"Augmented 7 (7♯5)",iv:[0,4,8,10],roles:["root","3rd","♯5th","♭7th"],desc:"Augmented triad + dominant 7th. The altered-dominant sound — Hendrix territory."},
+  "6":{name:"Major 6",iv:[0,4,7,9],roles:["root","3rd","5th","6th"],desc:"Major triad + 6th. Sweet and vintage — think 50s doo-wop and swing."},
+  m6:{name:"Minor 6",iv:[0,3,7,9],roles:["root","♭3rd","5th","6th"],desc:"Minor triad + 6th. The melodic-minor chord — sophisticated and slightly melancholy."},
+  "9":{name:"Dominant 9",iv:[0,4,7,10,14],roles:["root","3rd","5th","♭7th","9th"],desc:"Dominant 7 + 9th (the 2nd, one octave up). Extra funk and blues colour."},
+  maj9:{name:"Major 9",iv:[0,4,7,11,14],roles:["root","3rd","5th","7th","9th"],desc:"Maj7 + 9th. Wide-open and dreamy — neo-soul and R&B staple."},
+  m9:{name:"Minor 9",iv:[0,3,7,10,14],roles:["root","♭3rd","5th","♭7th","9th"],desc:"Minor 7 + 9th. The ii chord in jazz — warm, deep, endlessly loopable."},
+  "11":{name:"Dominant 11",iv:[0,4,7,10,17],roles:["root","3rd","5th","♭7th","11th"],desc:"Dominant 7 + 11th (the 4th). Bluesy and suspended — careful, the 11th can clash with the 3rd."},
+  "13":{name:"Dominant 13",iv:[0,4,7,10,21],roles:["root","3rd","5th","♭7th","13th"],desc:"Dominant 7 + 13th (the 6th). The classic big-band jazz chord."},
+  "7sus4":{name:"7sus4",iv:[0,5,7,10],roles:["root","4th","5th","♭7th"],desc:"Suspended 4th + dominant 7th. Funk and rock rhythm guitar loves this."},
+  add9:{name:"Major add9",iv:[0,4,7,14],roles:["root","3rd","5th","9th"],desc:"Major triad + 9th without the 7th. Open and modern — the 'Wonderwall' chord."}
+};
+const INTERVALS=[
+  {n:"Minor 2nd",s:1},{n:"Major 2nd",s:2},{n:"Minor 3rd",s:3},{n:"Major 3rd",s:4},
+  {n:"Perfect 4th",s:5},{n:"Tritone (♯4/♭5)",s:6},{n:"Perfect 5th",s:7},{n:"Minor 6th",s:8},
+  {n:"Major 6th",s:9},{n:"Minor 7th",s:10},{n:"Major 7th",s:11},{n:"Perfect Octave",s:12}
+];
+
+/* ================= AUDIO ================= */
+let actx=null, master=null, bassGainNode=null, guideGainNode=null, metroGainNode=null;
+function initAudio(){
+  if(actx){ if(actx.state==="suspended") actx.resume(); return; }
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  master=actx.createGain(); master.gain.value=0.8; master.connect(actx.destination);
+  bassGainNode=actx.createGain(); bassGainNode.gain.value=0.85; bassGainNode.connect(master);
+  guideGainNode=actx.createGain(); guideGainNode.gain.value=0.45; guideGainNode.connect(master);
+  metroGainNode=actx.createGain(); metroGainNode.gain.value=0.6; metroGainNode.connect(master);
+}
+function bassNote(freq,when,dur,vol){
+  const o1=actx.createOscillator(),o2=actx.createOscillator(),o3=actx.createOscillator();
+  o1.type="sawtooth"; o2.type="sine"; o3.type="triangle";
+  o1.frequency.value=freq; o2.frequency.value=freq; o3.frequency.value=freq*2;
+  const g1=actx.createGain(),g2=actx.createGain(),g3=actx.createGain();
+  g1.gain.value=0.28; g2.gain.value=0.55; g3.gain.value=0.14;
+  const f=actx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=Math.min(2400,700+freq*3); f.Q.value=0.8;
+  const env=actx.createGain(); const d=Math.max(0.08,dur);
+  env.gain.setValueAtTime(0,when);
+  env.gain.linearRampToValueAtTime(vol,when+0.012);
+  env.gain.exponentialRampToValueAtTime(Math.max(0.05,vol*0.55),when+Math.min(0.12,d*0.5));
+  env.gain.setValueAtTime(Math.max(0.05,vol*0.4),when+Math.max(0.12,d-0.05));
+  env.gain.linearRampToValueAtTime(0,when+d);
+  o1.connect(g1); o2.connect(g2); o3.connect(g3);
+  g1.connect(f); g2.connect(f); g3.connect(f); f.connect(env); env.connect(bassGainNode);
+  [o1,o2,o3].forEach(o=>{o.start(when);o.stop(when+d+0.05);});
+}
+/* ---- Natural piano: sampled Salamander Grand Piano (Tone.js audio) with synth fallback ---- */
+const pianoBuffers=new Map();   // midi -> AudioBuffer
+const pianoLoading=new Set();
+let pianoReady=false, pianoFailed=false;
+function midiToSampleName(m){
+  const names=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  return names[((m%12)+12)%12]+(Math.floor(m/12)-1);
+}
+function setPianoBadge(state,text){
+  const b=$("pianoBadge"); if(!b) return;
+  b.className="piano-badge "+state; $("pianoBadgeText").textContent=text;
+}
+function loadPianoNote(m){
+  if(pianoBuffers.has(m)||pianoLoading.has(m)||!actx) return;
+  pianoLoading.add(m);
+  const name=midiToSampleName(m);
+  const urls=[
+    "https://cdn.jsdelivr.net/gh/Tonejs/audio@master/salamander/"+name+".mp3",
+    "https://tonejs.github.io/audio/salamander/"+name+".mp3"
+  ];
+  (async()=>{
+    for(const url of urls){
+      try{
+        const res=await fetch(url);
+        if(!res.ok) continue;
+        const buf=await res.arrayBuffer();
+        const audio=await actx.decodeAudioData(buf);
+        pianoBuffers.set(m,audio);
+        pianoReady=true; pianoFailed=false;
+        setPianoBadge("ready","🎹 Piano: sampled grand (Salamander)");
+        pianoLoading.delete(m); return;
+      }catch(e){ /* try next url */ }
+    }
+    pianoLoading.delete(m);
+    if(pianoBuffers.size===0&&!pianoReady){
+      pianoFailed=true;
+      setPianoBadge("","🎹 Piano: synth fallback (samples offline)");
+    }
+  })();
+}
+function preloadPiano(midis){
+  initAudio();
+  setPianoBadge("loading","🎹 Piano: loading sampled grand…");
+  [...new Set(midis)].forEach(m=>loadPianoNote(m));
+}
+function pianoSynthNote(freq,when,dur,vol){
+  /* Improved piano-ish synth used only until samples arrive / if offline */
+  const partials=[[1,0.55],[2,0.32],[3,0.16],[4,0.08],[5,0.04]];
+  const out=actx.createGain(); out.gain.value=vol; out.connect(guideGainNode);
+  const lp=actx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=Math.min(6000,1200+freq*4); lp.connect(out);
+  partials.forEach(([mult,amp])=>{
+    const o=actx.createOscillator(); o.type="sine"; o.frequency.value=freq*mult*(1+0.0004*mult*mult);
+    const g=actx.createGain(); const d=Math.max(0.2,dur/(1+mult*0.35));
+    g.gain.setValueAtTime(0,when);
+    g.gain.linearRampToValueAtTime(amp,when+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0008,when+d);
+    o.connect(g); g.connect(lp); o.start(when); o.stop(when+d+0.05);
+  });
+}
+function pianoNote(freq,when,dur,vol){
+  initAudio();
+  const midi=Math.round(69+12*Math.log2(freq/440));
+  const buf=pianoBuffers.get(midi);
+  if(buf){
+    const src=actx.createBufferSource(); src.buffer=buf;
+    const g=actx.createGain(); g.gain.value=vol*0.9;
+    const lp=actx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=8000;
+    src.connect(lp); lp.connect(g); g.connect(guideGainNode);
+    src.start(when); src.stop(when+Math.max(dur,0.4)+1.5);
+  } else {
+    loadPianoNote(midi);
+    pianoSynthNote(freq,when,dur,vol);
+  }
+}
+function click(when,accent){
+  const o=actx.createOscillator(),g=actx.createGain();
+  o.type="square"; o.frequency.value=accent?2000:1400;
+  g.gain.setValueAtTime(accent?0.5:0.3,when);
+  g.gain.exponentialRampToValueAtTime(0.001,when+0.05);
+  o.connect(g); g.connect(metroGainNode); o.start(when); o.stop(when+0.06);
+}
+const midiFreq=(m)=>440*Math.pow(2,(m-69)/12);
+function playMidi(m,when,dur,vol){ initAudio(); bassNote(midiFreq(m),when,dur,vol||0.9); }
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+
+/* ================= EXERCISE GENERATORS ================= */
+function notesInWindow(pcs,winStart,winEnd){
+  const out=[];
+  for(let s=0;s<4;s++) for(let f=winStart;f<=winEnd;f++){
+    const m=stringMidi(s,f);
+    if(pcs.includes(((m%12)+12)%12)) out.push({s,f,m});
+  }
+  out.sort((a,b)=>a.m-b.m);
+  return out;
+}
+function scaleExercise(rootPc,scaleKey,winStart,winEnd,step){
+  const iv=SCALES[scaleKey].iv;
+  const pcs=iv.map(i=>(rootPc+i)%12);
+  const notes=notesInWindow(pcs,winStart,winEnd);
+  const seq=notes.map((n,i)=>({s:n.s,f:n.f,b:i*step,d:step*0.92}));
+  return {notes:seq,totalBeats:seq.length*step};
+}
+function triadExercise(rootPc,chordKey,winStart,winEnd){
+  const iv=CHORDS[chordKey].iv;
+  const pcs=iv.map(i=>(rootPc+i)%12);
+  const notes=notesInWindow(pcs,winStart,winEnd);
+  const up=notes.map(n=>({s:n.s,f:n.f}));
+  const seq=[...up,...up.slice().reverse()].map((n,i)=>({s:n.s,f:n.f,b:i*0.5,d:0.46}));
+  return {notes:seq,totalBeats:seq.length*0.5};
+}
+function chromaticExercise(){
+  const seq=[]; let b=0;
+  for(let s=3;s>=0;s--) for(let f=1;f<=5;f++){ seq.push({s,f,b,d:0.46}); b+=0.5; }
+  for(let s=0;s<=3;s++) for(let f=5;f>=1;f--){ seq.push({s,f,b,d:0.46}); b+=0.5; }
+  return {notes:seq,totalBeats:b};
+}
+function progressionExercise(keyRoot,chordKeys){
+  const seq=[]; let b=0;
+  chordKeys.forEach(ck=>{
+    const iv=CHORDS[ck].iv;
+    const pcs=iv.map(i=>(keyRoot+i)%12);
+    const cand=notesInWindow(pcs,0,12).filter(n=>n.m<40);
+    const rootNote=cand.find(n=>((n.m%12)+12)%12===keyRoot%12)||cand[0];
+    const fifthPc=(keyRoot+7)%12, octPc=keyRoot%12;
+    const fifth=cand.find(n=>((n.m%12)+12)%12===fifthPc);
+    const oct=cand.find(n=>((n.m%12)+12)%12===octPc&&n.m>rootNote.m);
+    const bar=[rootNote,fifth,oct,fifth].filter(Boolean);
+    bar.forEach((n,i)=>seq.push({s:n.s,f:n.f,b:b+i,d:0.9}));
+    b+=4;
+  });
+  return {notes:seq,totalBeats:b};
+}
+const F7ALT=[[3,8],[3,10],[3,11],[2,8],[2,10],[2,12],[1,9],[1,10],[1,10],[1,9],[2,12],[2,10],[2,8],[3,11],[3,10],[3,8]];
+
+/* ---- Jazz play-along: walking bass + piano comping/melody ---- */
+function midiToFret(m){
+  let best=null;
+  for(let s=0;s<4;s++){
+    const f=m-tuning().openMidi[s];
+    if(f>=0&&f<=24){ if(!best||f<best.f) best={s,f}; }
+  }
+  return best;
+}
+function lowRootMidi(pc){
+  /* lowest comfortable root near E1-A1 area */
+  let m=28+(((pc-28)%12)+12)%12;
+  if(m<31) m+=12;
+  return m;
+}
+function walkingBass(chords){
+  /* chords: [{root:pc, type:chordKey}] one per bar. Returns bass notes + piano comping + chord chart */
+  const bass=[], piano=[], chart=[];
+  chords.forEach((ch,bar)=>{
+    const b0=bar*4;
+    const rootM=lowRootMidi(ch.root);
+    const next=chords[(bar+1)%chords.length];
+    const nextRootM=lowRootMidi(next.root);
+    const thirdOff=CHORDS[ch.type].iv[1]||4;
+    const fifthOff=CHORDS[ch.type].iv[2]||7;
+    const seventhOff=CHORDS[ch.type].iv[3];
+    const approach=(nextRootM-1>=rootM)?nextRootM-1:nextRootM+2;
+    const line=[rootM,rootM+thirdOff,rootM+fifthOff,approach];
+    line.forEach((m,i)=>{
+      const sf=midiToFret(m);
+      if(sf) bass.push({s:sf.s,f:sf.f,b:b0+i,d:0.92});
+    });
+    /* piano comping: chord tones on beats 2 and 4 (voiced around C4) */
+    const compOffs=[7,10,14].map(o=>o);
+    [1,3].forEach(beat=>{
+      compOffs.forEach(o=>{
+        const m=48+(((ch.root+o)%12+12)%12)+12;
+        piano.push({midi:m,b:b0+beat,d:0.5});
+      });
+    });
+    chart.push({symbol:pcName(ch.root)+CHORDS[ch.type].name,b:b0});
+  });
+  return {bass,piano,chart};
+}
+const JAZZ_SONGS=[
+  {id:"autumn",title:"Autumn Leaves (simplified)",sub:"D minor · ii–V–I · piano + walking bass",key:"D minor",tempo:110,diff:"Master",sig:"4/4",
+   theory:"<b>Autumn Leaves</b> is the jazz standard for learning ii–V–I. Each pair of bars is a ii–V–I in a new key: Dm7–G7–Cmaj7, then Fmaj7, then Bm7b5–E7–Am7. The tab is your <b>walking bass line</b> (root–3rd–5th–approach); the sampled piano comps the chords and plays a simplified melody. Loop bars 1–4 at 0.5× until the line is automatic.",
+   chords:[{root:2,type:"m7"},{root:7,type:"7"},{root:0,type:"maj7"},{root:5,type:"maj7"},{root:11,type:"m7b5"},{root:4,type:"7"},{root:9,type:"m7"},{root:9,type:"m7"}],
+   melody:[{midi:65,b:0,d:1.5},{midi:64,b:2,d:0.5},{midi:62,b:2.5,d:1.5},{midi:65,b:4,d:1},{midi:67,b:5,d:1},{midi:69,b:6,d:2},{midi:67,b:8,d:1.5},{midi:65,b:10,d:0.5},{midi:64,b:10.5,d:1.5},{midi:62,b:12,d:2},{midi:64,b:14,d:1},{midi:65,b:15,d:1},{midi:67,b:16,d:1.5},{midi:69,b:18,d:0.5},{midi:72,b:18.5,d:1.5},{midi:69,b:20,d:2},{midi:67,b:22,d:1},{midi:65,b:23,d:1},{midi:64,b:24,d:1.5},{midi:62,b:26,d:0.5},{midi:60,b:26.5,d:1.5},{midi:62,b:28,d:2},{midi:64,b:30,d:1},{midi:62,b:31,d:1}]},
+  {id:"bluebossa",title:"Blue Bossa (simplified)",sub:"C minor · bossa nova feel · piano + walking bass",key:"C minor",tempo:100,diff:"Master",sig:"4/4",
+   theory:"<b>Blue Bossa</b> (Kenny Dorham) is a minor blues in C minor: Cm7 – Dm7♭5 – G7 – Cm7, then Fm7. The ♭5 in Dm7♭5 is the sound to listen for — it creates the tension that G7 resolves. Play the walking line on loop, then try substituting the approach notes with scale tones from C minor.",
+   chords:[{root:0,type:"m7"},{root:2,type:"m7b5"},{root:7,type:"7"},{root:0,type:"m7"},{root:5,type:"m7"},{root:2,type:"m7b5"},{root:7,type:"7"},{root:0,type:"m7"}],
+   melody:[{midi:63,b:0,d:2},{midi:67,b:2,d:1},{midi:68,b:3,d:1},{midi:67,b:4,d:1},{midi:65,b:5,d:1},{midi:63,b:6,d:2},{midi:62,b:8,d:1},{midi:63,b:9,d:1},{midi:60,b:10,d:2},{midi:63,b:12,d:1.5},{midi:65,b:14,d:0.5},{midi:67,b:14.5,d:1.5},{midi:65,b:16,d:2},{midi:63,b:18,d:1},{midi:62,b:19,d:1},{midi:60,b:20,d:2},{midi:62,b:22,d:1},{midi:63,b:23,d:1},{midi:60,b:24,d:2},{midi:62,b:26,d:1},{midi:63,b:27,d:1},{midi:63,b:28,d:4}]},
+  {id:"allblues",title:"All Blues (simplified)",sub:"E♭ blues · 12-bar form · piano + walking bass",key:"E♭",tempo:95,diff:"Master",sig:"4/4",
+   theory:"<b>All Blues</b> (Miles Davis) is a 12-bar blues in E♭. The form is always the same: I–I–I–I–IV–IV–I–I–V–IV–I–V. Once you can walk the roots, add the 3rds and 5ths, then try the <b>blues scale</b> (E♭ F G♭ A♭ B♭ C) over the top. The piano plays dominant-7 comping — the classic blues sound.",
+   chords:[{root:3,type:"7"},{root:3,type:"7"},{root:3,type:"7"},{root:3,type:"7"},{root:8,type:"7"},{root:8,type:"7"},{root:3,type:"7"},{root:3,type:"7"},{root:10,type:"7"},{root:8,type:"7"},{root:3,type:"7"},{root:10,type:"7"}],
+   melody:[{midi:63,b:0,d:2},{midi:65,b:2,d:2},{midi:67,b:4,d:2},{midi:70,b:6,d:2},{midi:68,b:8,d:2},{midi:67,b:10,d:2},{midi:63,b:12,d:2},{midi:65,b:14,d:2},{midi:67,b:16,d:2},{midi:70,b:18,d:2},{midi:72,b:20,d:2},{midi:70,b:22,d:2},{midi:68,b:24,d:2},{midi:67,b:26,d:2},{midi:65,b:28,d:2},{midi:63,b:30,d:2},{midi:65,b:32,d:2},{midi:67,b:34,d:2},{midi:70,b:36,d:2},{midi:72,b:38,d:2},{midi:70,b:40,d:2},{midi:68,b:42,d:2},{midi:67,b:44,d:2},{midi:65,b:46,d:2}]}
+];
+function jazzExercise(song){
+  const w=walkingBass(song.chords);
+  const piano=[...w.piano.map(p=>({...p,melody:false})),...song.melody.map(p=>({...p,melody:true}))].sort((a,b)=>a.b-b.b);
+  return {notes:w.bass,totalBeats:song.chords.length*4,piano,chart:w.chart};
+}
+
+const EXERCISES=[
+  {id:"f7alt",title:"Altered Dominants — F7alt",sub:"C melodic minor · from practice.html",key:"F",tempo:80,diff:"Advanced",sig:"4/4",
+   theory:"<b>F7alt</b> is a dominant 7 with a ♭9, ♯9, ♭13 and ♯11 — the 'outside' jazz sound. It comes from the <b>C melodic minor</b> scale (C D E♭ F G A B). Loop it slowly, then transpose the shape to every key.",
+   build:()=>{const seq=F7ALT.map((p,i)=>({s:p[0],f:p[1],b:i*0.5,d:0.46}));return{notes:seq,totalBeats:seq.length*0.5};}},
+  {id:"cmajor",title:"C Major Scale — Position",sub:"Ionian · W-W-H-W-W-W-H",key:"C",tempo:72,diff:"Beginner",sig:"4/4",
+   theory:"The <b>major scale</b> is the reference pattern for all Western music. Play it up and down in one position, naming each note out loud. Then try it in every key with the Scale Explorer below.",
+   build:()=>scaleExercise(0,"major",3,8,0.5)},
+  {id:"aminor",title:"A Natural Minor Scale",sub:"Aeolian · relative minor of C",key:"A",tempo:72,diff:"Beginner",sig:"4/4",
+   theory:"<b>A natural minor</b> uses the same notes as C major — that is why it is called the <b>relative minor</b>. Same notes, different 'home'. Compare the two exercises back to back.",
+   build:()=>scaleExercise(9,"naturalMinor",0,7,0.5)},
+  {id:"ctriad",title:"C Major Triad Arpeggio",sub:"Root–3rd–5th up &amp; down",key:"C",tempo:80,diff:"Beginner",sig:"4/4",
+   theory:"A <b>triad</b> stacks two thirds: root–3rd–5th. Arpeggiate it up and down across the strings. This is the foundation of every chord — see <a href='practice4.html'>practice4.html</a> for all shapes.",
+   build:()=>triadExercise(0,"maj",3,10)},
+  {id:"chromatic",title:"Finger Independence — Chromatic",sub:"1-2-3-4 across all strings",key:"All",tempo:60,diff:"Intermediate",sig:"4/4",
+   theory:"Chromatic 1-2-3-4 trains <b>finger independence</b> and even tone. Keep fingers close to the fretboard, anchor the thumb, and let the metronome be the boss. Full drill: <a href='practice2.html'>practice2.html</a>.",
+   build:()=>chromaticExercise()},
+  {id:"popprog",title:"I–V–vi–IV in C (Pop Loop)",sub:"C – G – Am – F",key:"C",tempo:90,diff:"Intermediate",sig:"4/4",
+   theory:"The most-used progression in pop music. Each bar: root–5th–octave–5th. Play it on loop and try singing the chord roots, then the 3rds, then the 5ths.",
+   build:()=>progressionExercise(0,["maj","maj","min","maj"])},
+  {id:"autumn",title:"🎷 Autumn Leaves — Walking Bass",sub:"D minor · piano comping + melody",key:"D minor",tempo:110,diff:"Master",sig:"4/4",
+   theory:JAZZ_SONGS[0].theory,
+   build:()=>jazzExercise(JAZZ_SONGS[0])},
+  {id:"bluebossa",title:"🎷 Blue Bossa — Walking Bass",sub:"C minor · bossa feel · piano + melody",key:"C minor",tempo:100,diff:"Master",sig:"4/4",
+   theory:JAZZ_SONGS[1].theory,
+   build:()=>jazzExercise(JAZZ_SONGS[1])},
+  {id:"allblues",title:"🎷 All Blues — Walking Bass",sub:"E♭ 12-bar blues · piano comping",key:"E♭",tempo:95,diff:"Master",sig:"4/4",
+   theory:JAZZ_SONGS[2].theory,
+   build:()=>jazzExercise(JAZZ_SONGS[2])}
+];
+
+/* ================= TAB PLAYER ================= */
+const $=id=>document.getElementById(id);
+let exIndex=0, exData=null, tempo=80, speed=1, pxPerBeat=72;
+let isPlaying=false, loopOn=false, metroOn=false, countIn=false, guideOn=false;
+let loopStart=null, loopEnd=null, seekBeat=0;
+let startCtxTime=0, startBeat=0, schedTimer=null, rafId=null;
+let nextIdx=0, nextBeatTime=0, lastMetroBeat=-1, countInUntil=0;
+let nextPianoIdx=0, jazzTracks={bass:true,comp:true,melody:true};
+const BEATS_PER_BAR=4;
+
+function secPerBeat(){ return (60/tempo)/speed; }
+function currentBeat(){
+  if(!isPlaying) return seekBeat;
+  return startBeat+(actx.currentTime-startCtxTime)/secPerBeat();
+}
+function fmtTime(sec){ sec=Math.max(0,sec); const m=Math.floor(sec/60),s=Math.floor(sec%60); return m+":"+String(s).padStart(2,"0"); }
+
+let exFilter="all";
+function loadExercise(i){
+  exIndex=i; const ex=EXERCISES[i];
+  exData=ex.build(); tempo=ex.tempo; seekBeat=0; loopStart=null; loopEnd=null; loopOn=false;
+  $("loopBtn").classList.remove("on");
+  $("songTitle").textContent=ex.title;
+  $("songSub").textContent=ex.sub+" · KebabKilla Theory Lab";
+  const lvlCls=ex.diff.toLowerCase();
+  $("songPills").innerHTML=
+    `<span class="pill">Key <b>${ex.key}</b></span><span class="pill">Tempo <b>${ex.tempo} BPM</b></span>`+
+    `<span class="pill">Time <b>${ex.sig}</b></span><span class="pill">Level <b>${ex.diff}</b></span>`+
+    `<span class="pill">Tuning <b>${tuning().label}</b></span><span class="pill">Notes <b>${exData.notes.length}</b></span>`+
+    (exData.piano?`<span class="pill">🎹 Piano <b>comping + melody</b></span>`:"");
+  $("exerciseTheory").innerHTML=ex.theory;
+  $("tempoVal").textContent=tempo;
+  document.querySelectorAll(".ex-item").forEach((el,j)=>el.classList.toggle("on",j===i));
+  renderTab(); renderPlayerFretboard(); renderPlayerPiano(); renderPlayerNotes(); renderChordChart(); updateNow(null); updateProgress(0);
+  $("timeTot").textContent=fmtTime(exData.totalBeats*secPerBeat());
+  if(exData.piano&&exData.piano.length){
+    preloadPiano(exData.piano.map(p=>p.midi));
+    toast("🎹 Sampled piano loading — press Play");
+  }
+}
+function renderChordChart(){
+  const box=$("exerciseNotes");
+  if(exData&&exData.chart&&exData.chart.length){
+    box.innerHTML=`<div class="chord-chart" style="margin:0">${exData.chart.map((c,i)=>`<span class="chord-chip" data-b="${c.b}">${c.symbol}<small>bar ${i+1}</small></span>`).join("")}</div>`;
+  } else box.innerHTML="";
+}
+function highlightChord(b){
+  if(!exData||!exData.chart) return;
+  let cur=-1;
+  exData.chart.forEach((c,i)=>{ if(c.b<=b) cur=i; });
+  document.querySelectorAll("#exerciseNotes .chord-chip").forEach((el,i)=>el.classList.toggle("now",i===cur));
+}
+function renderExerciseList(){
+  const list=EXERCISES.map((ex,i)=>({ex,i})).filter(({ex})=>exFilter==="all"||ex.diff===exFilter||(exFilter==="Master"&&ex.diff==="Advanced"));
+  $("exerciseList").innerHTML=list.map(({ex,i})=>
+    `<button class="ex-item${i===exIndex?" on":""}" data-i="${i}" type="button"><span class="n">${i+1}</span><span style="flex:1"><b>${ex.title}</b><span>${ex.sub} · ${ex.tempo} BPM</span></span><span class="level-badge ${ex.diff.toLowerCase()}">${ex.diff}</span></button>`).join("")||`<p class="muted">No exercises at this level yet — try All.</p>`;
+  document.querySelectorAll(".ex-item").forEach(el=>el.addEventListener("click",()=>{stopPlayback();loadExercise(+el.dataset.i);}));
+}
+function tabWidth(){ return Math.max(560, exData.totalBeats*pxPerBeat+90); }
+function renderTab(){
+  const sheet=$("tabSheet"); const W=tabWidth(); const H=150;
+  sheet.style.width=W+"px"; sheet.style.height=H+"px";
+  const labels=STRING_LABELS();
+  let html="";
+  for(let s=0;s<4;s++){
+    const y=34+s*30;
+    html+=`<div class="tab-string-label" style="top:${y-9}px">${labels[s]}</div>`;
+    html+=`<div class="tab-line" style="top:${y}px"></div>`;
+  }
+  const bars=Math.ceil(exData.totalBeats/BEATS_PER_BAR);
+  for(let b=0;b<=bars;b++){
+    const x=56+b*BEATS_PER_BAR*pxPerBeat;
+    html+=`<div class="tab-barline" style="left:${x}px"></div>`;
+    if(b<bars) html+=`<div class="tab-measure-num" style="left:${x+5}px">${b+1}</div>`;
+  }
+  exData.notes.forEach((n,i)=>{
+    const x=56+n.b*pxPerBeat, y=34+n.s*30;
+    const m=stringMidi(n.s,n.f);
+    html+=`<button class="tab-note" data-i="${i}" style="left:${x}px;top:${y}px" title="${pcName(m)} · ${labels[n.s]} string fret ${n.f}">${n.f}<span class="ord">${i+1}</span></button>`;
+  });
+  html+=`<div class="playhead" id="playhead" style="left:56px"></div>`;
+  if(loopStart!==null&&loopEnd!==null&&loopEnd>loopStart){
+    html+=`<div class="loop-region" id="loopRegion" style="left:${56+loopStart*pxPerBeat}px;width:${(loopEnd-loopStart)*pxPerBeat}px"></div>`;
+  }
+  sheet.innerHTML=html;
+  sheet.querySelectorAll(".tab-note").forEach(el=>{
+    el.addEventListener("click",e=>{ e.stopPropagation(); const n=exData.notes[+el.dataset.i]; initAudio(); bassNote(stringFreq(n.s,n.f),actx.currentTime,0.5,0.9); updateNow(n); });
+  });
+  bindTabSeek();
+}
+function bindTabSeek(){
+  const vp=$("tabViewport"), sheet=$("tabSheet");
+  let dragging=false, dragStart=null;
+  function beatFromEvent(e){
+    const r=sheet.getBoundingClientRect();
+    const x=e.clientX-r.left-56;
+    return Math.min(exData.totalBeats,Math.max(0,x/pxPerBeat));
+  }
+  vp.addEventListener("mousedown",e=>{
+    if(e.target.closest(".tab-note")) return;
+    dragging=true; dragStart=beatFromEvent(e);
+    let region=sheet.querySelector(".loop-region");
+    if(!region){ region=document.createElement("div"); region.className="loop-region drag"; region.id="loopRegion"; sheet.appendChild(region); }
+    region.classList.add("drag");
+    const move=ev=>{
+      const b=beatFromEvent(ev);
+      const a=Math.min(dragStart,b), c=Math.max(dragStart,b);
+      region.style.left=(56+a*pxPerBeat)+"px"; region.style.width=((c-a)*pxPerBeat)+"px";
+    };
+    const up=ev=>{
+      dragging=false; window.removeEventListener("mousemove",move); window.removeEventListener("mouseup",up);
+      const b=beatFromEvent(ev); const a=Math.min(dragStart,b), c=Math.max(dragStart,b);
+      if(c-a>0.4){ loopStart=a; loopEnd=c; loopOn=true; $("loopBtn").classList.add("on"); renderTab(); updateProgressLoop(); toast("Loop region set — press Play"); }
+      else { seekBeat=b; if(isPlaying) restartFrom(b); updateProgress(b); }
+    };
+    window.addEventListener("mousemove",move); window.addEventListener("mouseup",up);
+  });
+  vp.addEventListener("dblclick",()=>{ loopStart=null; loopEnd=null; loopOn=false; $("loopBtn").classList.remove("on"); renderTab(); updateProgressLoop(); toast("Loop cleared"); });
+}
+function updateProgressLoop(){
+  const el=$("progressLoop");
+  if(loopStart!==null&&loopEnd!==null){ el.style.display="block"; el.style.left=(loopStart/exData.totalBeats*100)+"%"; el.style.width=((loopEnd-loopStart)/exData.totalBeats*100)+"%"; }
+  else el.style.display="none";
+}
+function updateProgress(b){
+  const pct=exData.totalBeats?Math.min(100,b/exData.totalBeats*100):0;
+  $("progressFill").style.width=pct+"%";
+  $("timeCur").textContent=fmtTime(b*secPerBeat());
+  $("timeTot").textContent=fmtTime(exData.totalBeats*secPerBeat());
+  const bar=Math.floor(b/BEATS_PER_BAR)+1, beat=Math.floor(b%BEATS_PER_BAR)+1;
+  $("beatCur").textContent=`Bar ${bar} · Beat ${beat}`;
+  const ph=$("playhead"); if(ph) ph.style.left=(56+b*pxPerBeat)+"px";
+}
+function updateNow(n){
+  if(!n){ $("nowNote").textContent="—"; $("nowInfo").innerHTML="Pick an exercise on the right, then press <b>Play</b>. Space = play/pause."; return; }
+  const m=stringMidi(n.s,n.f);
+  $("nowNote").textContent=pcName(m);
+  $("nowInfo").innerHTML=`<b>${pcName(m)}</b> (${midiName(m)}) · ${STRING_LABELS()[n.s]} string, fret ${n.f} · beat ${(n.b+1).toFixed(1)}`;
+}
+function highlightCurrent(b){
+  const notes=exData.notes; let cur=-1;
+  for(let i=0;i<notes.length;i++){ if(notes[i].b<=b) cur=i; else break; }
+  document.querySelectorAll(".tab-note").forEach((el,i)=>{
+    el.classList.toggle("now",i===cur);
+    el.classList.toggle("done",i<cur);
+  });
+  if(cur>=0) updateNow(notes[cur]);
+  document.querySelectorAll("#playerFretboard .fb-cell").forEach(c=>{
+    const i=+c.dataset.i; c.classList.toggle("now",i===cur);
+  });
+  document.querySelectorAll("#playerPiano .key").forEach(k=>{
+    const i=+k.dataset.i; k.classList.toggle("on",i===cur);
+  });
+  highlightChord(b);
+}
+function schedulerTick(){
+  const ahead=actx.currentTime+0.12;
+  while(nextBeatTime<ahead){
+    const b=startBeat+(nextBeatTime-startCtxTime)/secPerBeat();
+    if(b>=exData.totalBeats){
+      if(loopOn&&loopStart!==null&&loopEnd!==null&&loopEnd>loopStart){
+        startBeat=loopStart; startCtxTime=nextBeatTime; nextIdx=notesFromBeat(loopStart); nextPianoIdx=pianoFromBeat(loopStart); lastMetroBeat=-1;
+        continue;
+      }
+      stopPlayback(); return;
+    }
+    while(nextIdx<exData.notes.length&&exData.notes[nextIdx].b<b-0.001) nextIdx++;
+    if(nextIdx<exData.notes.length){
+      const n=exData.notes[nextIdx];
+      if(n.b>=b-0.001&&n.b<b+0.05){
+        const when=startCtxTime+(n.b-startBeat)*secPerBeat();
+        if(!exData.piano||jazzTracks.bass) bassNote(stringFreq(n.s,n.f),when,Math.max(0.15,n.d*secPerBeat()*0.9),0.9);
+        if(guideOn) pianoNote(midiFreq(stringMidi(n.s,n.f)+12),when,0.5,0.5);
+        nextIdx++;
+      }
+    }
+    if(exData.piano){
+      while(nextPianoIdx<exData.piano.length&&exData.piano[nextPianoIdx].b<b-0.001) nextPianoIdx++;
+      if(nextPianoIdx<exData.piano.length){
+        const p=exData.piano[nextPianoIdx];
+        if(p.b>=b-0.001&&p.b<b+0.05){
+          const when=startCtxTime+(p.b-startBeat)*secPerBeat();
+          const isMelody=p.melody===true;
+          if((isMelody&&jazzTracks.melody)||(!isMelody&&jazzTracks.comp)){
+            pianoNote(midiFreq(p.midi),when,Math.max(0.3,p.d*secPerBeat()),isMelody?0.75:0.55);
+          }
+          nextPianoIdx++;
+        }
+      }
+    }
+    if(metroOn){
+      const beatInt=Math.floor(b);
+      if(beatInt!==lastMetroBeat&&b>=beatInt){ click(nextBeatTime,beatInt%BEATS_PER_BAR===0); lastMetroBeat=beatInt; }
+    }
+    nextBeatTime+=0.025;
+  }
+}
+function notesFromBeat(b){ let i=0; while(i<exData.notes.length&&exData.notes[i].b<b-0.001) i++; return i; }
+function pianoFromBeat(b){ if(!exData.piano) return 0; let i=0; while(i<exData.piano.length&&exData.piano[i].b<b-0.001) i++; return i; }
+function rafLoop(){
+  if(!isPlaying) return;
+  const b=currentBeat();
+  updateProgress(b); highlightCurrent(b);
+  const vp=$("tabViewport"), ph=$("playhead");
+  if(ph&&$("pane-tabs").classList.contains("on")){
+    const x=56+b*pxPerBeat;
+    if(x>vp.scrollLeft+vp.clientWidth-120) vp.scrollLeft=x-120;
+  }
+  rafId=requestAnimationFrame(rafLoop);
+}
+function startPlayback(){
+  initAudio(); if(!exData) return;
+  isPlaying=true; $("playBtn").textContent="⏸";
+  startCtxTime=actx.currentTime+0.08; startBeat=seekBeat;
+  nextIdx=notesFromBeat(seekBeat); nextPianoIdx=pianoFromBeat(seekBeat); nextBeatTime=startCtxTime; lastMetroBeat=-1;
+  if(countIn){
+    const spb=secPerBeat();
+    for(let i=0;i<BEATS_PER_BAR;i++) click(startCtxTime+i*spb,i===0);
+    startCtxTime+=BEATS_PER_BAR*spb;
+  }
+  schedTimer=setInterval(schedulerTick,25);
+  rafId=requestAnimationFrame(rafLoop);
+}
+function restartFrom(b){ clearInterval(schedTimer); cancelAnimationFrame(rafId); seekBeat=b; startPlayback(); }
+function stopPlayback(){
+  isPlaying=false; $("playBtn").textContent="▶";
+  clearInterval(schedTimer); cancelAnimationFrame(rafId);
+  if(exData){ seekBeat=0; updateProgress(0); highlightCurrent(-1); updateNow(null); }
+}
+function togglePlay(){ isPlaying?stopPlayback():startPlayback(); }
+
+/* Player fretboard / piano / notes views */
+function renderPlayerFretboard(){
+  const wrap=$("playerFretboard"); const labels=STRING_LABELS();
+  const order={}; exData.notes.forEach((n,i)=>{ const k=n.s+"-"+n.f; if(!(k in order)) order[k]=i+1; });
+  let html=`<div class="fretboard" style="grid-template-columns:34px repeat(25,1fr)">`;
+  for(let s=0;s<4;s++){
+    html+=`<div class="fb-cell" style="cursor:default;font-weight:900">${labels[s]}</div>`;
+    for(let f=0;f<=24;f++){
+      const k=s+"-"+f; const has=k in order;
+      const idx=exData.notes.findIndex(n=>n.s===s&&n.f===f);
+      html+=`<div class="fb-cell${f===0?" fb-nut":""}${has?" tone":""}" data-i="${idx}" data-s="${s}" data-f="${f}">${has?`<span class="ord">${order[k]}</span><span class="nl">${pcName(stringMidi(s,f))}</span>`:""}</div>`;
+    }
+  }
+  html+="</div>";
+  wrap.innerHTML=html;
+  wrap.querySelectorAll(".fb-cell[data-s]").forEach(c=>{
+    c.addEventListener("click",()=>{ const s=+c.dataset.s,f=+c.dataset.f; initAudio(); bassNote(stringFreq(s,f),actx.currentTime,0.5,0.9); });
+  });
+}
+function renderPlayerPiano(){
+  const wrap=$("playerPiano");
+  const used=new Set(exData.notes.map(n=>((stringMidi(n.s,n.f)%12)+12)%12));
+  let html=`<div class="piano">`;
+  for(let oct=0;oct<2;oct++) for(let pc=0;pc<12;pc++){
+    const black=[1,3,6,8,10].includes(pc);
+    const idx=exData.notes.findIndex(n=>((stringMidi(n.s,n.f)%12)+12)%12===pc);
+    html+=`<button class="key${black?" black":""}${used.has(pc)?" tone":""}" data-i="${idx}" data-pc="${pc}" type="button"><span>${pcName(pc)}</span></button>`;
+  }
+  html+="</div>"; wrap.innerHTML=html;
+  wrap.querySelectorAll(".key").forEach(k=>k.addEventListener("click",()=>{ initAudio(); pianoNote(midiFreq(48+(+k.dataset.pc)),actx.currentTime,0.6,0.7); }));
+}
+function renderPlayerNotes(){
+  const rows=exData.notes.map((n,i)=>{
+    const m=stringMidi(n.s,n.f);
+    return `<tr><td>${i+1}</td><td><b>${pcName(m)}</b></td><td>${STRING_LABELS()[n.s]} string</td><td>${n.f}</td><td>${(n.b+1).toFixed(1)}</td><td><button class="btn" data-i="${i}" type="button" style="padding:4px 10px">▶ Hear</button></td></tr>`;
+  }).join("");
+  $("playerNotes").innerHTML=`<table class="note-table"><thead><tr><th>#</th><th>Note</th><th>String</th><th>Fret</th><th>Beat</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  $("playerNotes").querySelectorAll("button[data-i]").forEach(b=>b.addEventListener("click",()=>{
+    const n=exData.notes[+b.dataset.i]; initAudio(); bassNote(stringFreq(n.s,n.f),actx.currentTime,0.5,0.9); updateNow(n);
+  }));
+}
+
+/* ================= SHARED FRETBOARD / PIANO RENDERERS ================= */
+function fretboardHTML(opts){
+  /* opts: {highlight: Map "s-f" -> {cls, label, ord}, onCell(s,f), showNames} */
+  const labels=STRING_LABELS(); const maxFret=opts.maxFret||24;
+  let html=`<div class="fretboard" style="grid-template-columns:34px repeat(${maxFret+1},1fr)">`;
+  for(let s=0;s<4;s++){
+    html+=`<div class="fb-cell" style="cursor:default;font-weight:900">${labels[s]}</div>`;
+    for(let f=0;f<=maxFret;f++){
+      const h=opts.highlight.get(s+"-"+f);
+      const m=stringMidi(s,f);
+      const name=opts.showNames||h?pcName(m):"";
+      html+=`<div class="fb-cell${f===0?" fb-nut":""}${h?" "+h.cls:""}" data-s="${s}" data-f="${f}">${h&&h.ord?`<span class="ord">${h.ord}</span>`:""}${name?`<span class="nl">${name}</span>`:""}</div>`;
+    }
+  }
+  html+="</div>";
+  html+=`<div class="fb-fret-nums" style="grid-template-columns:34px repeat(${maxFret+1},1fr)"><span></span>`;
+  for(let f=0;f<=maxFret;f++) html+=`<span>${f}</span>`;
+  html+="</div>";
+  return html;
+}
+function bindFretboard(wrap,fn){
+  wrap.querySelectorAll(".fb-cell[data-s]").forEach(c=>c.addEventListener("click",()=>fn(+c.dataset.s,+c.dataset.f)));
+}
+function pianoHTML(highlightPcs,rootPc){
+  let html=`<div class="piano">`;
+  for(let oct=0;oct<2;oct++) for(let pc=0;pc<12;pc++){
+    const black=[1,3,6,8,10].includes(pc);
+    const cls=pc===rootPc?"root":(highlightPcs.has(pc)?"tone":"");
+    html+=`<button class="key${black?" black":""} ${cls}" data-pc="${pc}" type="button"><span>${pcName(pc)}</span></button>`;
+  }
+  return html+"</div>";
+}
+function bindPiano(wrap,fn){
+  wrap.querySelectorAll(".key").forEach(k=>k.addEventListener("click",()=>fn(+k.dataset.pc)));
+}
+function noteButtons(wrapId,selected,onPick){
+  const w=$(wrapId);
+  w.innerHTML=NOTE_NAMES.map((n,i)=>`<button type="button" data-pc="${i}" class="${i===selected?"on":""}">${n}</button>`).join("");
+  w.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ w.querySelectorAll("button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); onPick(+b.dataset.pc); }));
+}
+
+/* ================= SCALE EXPLORER ================= */
+let scaleRoot=0, scaleKey="major", scaleDir="up", scaleTempo=72, scalePlaying=false, scaleTimer=null;
+function renderScale(){
+  const sc=SCALES[scaleKey]; const pcs=sc.iv.map(i=>(scaleRoot+i)%12);
+  const hl=new Map();
+  for(let s=0;s<4;s++) for(let f=0;f<=24;f++){
+    const pc=((stringMidi(s,f)%12)+12)%12;
+    if(pcs.includes(pc)) hl.set(s+"-"+f,{cls:pc===scaleRoot?"root":"tone"});
+  }
+  $("scaleFretboard").innerHTML=fretboardHTML({highlight:hl,showNames:true});
+  bindFretboard($("scaleFretboard"),(s,f)=>{initAudio();bassNote(stringFreq(s,f),actx.currentTime,0.6,0.9);});
+  $("scalePiano").innerHTML=pianoHTML(new Set(pcs),scaleRoot);
+  bindPiano($("scalePiano"),pc=>{initAudio();pianoNote(midiFreq(48+pc),actx.currentTime,0.6,0.7);});
+  const rows=sc.iv.map((iv,i)=>{
+    const pc=(scaleRoot+iv)%12;
+    return `<tr><td><b>${sc.deg[i]}</b></td><td><b>${pcName(pc)}</b></td><td>${iv} semitones</td><td><button class="btn" data-pc="${pc}" type="button" style="padding:4px 10px">▶ Hear</button></td></tr>`;
+  }).join("");
+  $("scaleTable").innerHTML=`<table class="note-table"><thead><tr><th>Degree</th><th>Note</th><th>Interval from root</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  $("scaleTable").querySelectorAll("button[data-pc]").forEach(b=>b.addEventListener("click",()=>{initAudio();pianoNote(midiFreq(48+(+b.dataset.pc)),actx.currentTime,0.7,0.7);}));
+  $("scaleTheory").innerHTML=`<b>${pcName(scaleRoot)} ${sc.name}</b> — ${sc.desc}<br><b>Notes:</b> ${sc.iv.map(iv=>pcName(scaleRoot+iv)).join(" · ")}`;
+}
+function playScale(){
+  initAudio(); stopScale();
+  const sc=SCALES[scaleKey]; const pcs=sc.iv.map(i=>(scaleRoot+i)%12);
+  let notes=notesInWindow(pcs,0,12);
+  if(scaleDir==="down") notes=notes.slice().reverse();
+  if(scaleDir==="updown") notes=[...notes,...notes.slice().reverse()];
+  scalePlaying=true; const step=(60/scaleTempo)*0.85; const t0=actx.currentTime+0.08;
+  notes.forEach((n,i)=>{
+    bassNote(stringFreq(n.s,n.f),t0+i*step,step*0.9,0.9);
+    scaleTimer=setTimeout(()=>{ if(!scalePlaying) return;
+      document.querySelectorAll("#scaleFretboard .fb-cell").forEach(c=>c.classList.toggle("now",+c.dataset.s===n.s&&+c.dataset.f===n.f));
+    },i*step*1000);
+  });
+  scaleTimer=setTimeout(stopScale,notes.length*step*1000+200);
+}
+function stopScale(){ scalePlaying=false; clearTimeout(scaleTimer); document.querySelectorAll("#scaleFretboard .fb-cell").forEach(c=>c.classList.remove("now")); }
+
+/* ================= CHORD BUILDER ================= */
+let chordRoot=0, chordKey="maj", chordInv=0;
+function chordNotes(){
+  const ch=CHORDS[chordKey]; const pcs=ch.iv.map(i=>(chordRoot+i)%12);
+  return {ch,pcs};
+}
+function renderChord(){
+  const {ch,pcs}=chordNotes();
+  const hl=new Map();
+  for(let s=0;s<4;s++) for(let f=0;f<=24;f++){
+    const pc=((stringMidi(s,f)%12)+12)%12;
+    const idx=pcs.indexOf(pc);
+    if(idx>=0){
+      const role=ch.roles[idx]||"ext";
+      const cls=idx===0?"root":"tone";
+      hl.set(s+"-"+f,{cls});
+    }
+  }
+  $("chordFretboard").innerHTML=fretboardHTML({highlight:hl,showNames:true});
+  bindFretboard($("chordFretboard"),(s,f)=>{initAudio();bassNote(stringFreq(s,f),actx.currentTime,0.6,0.9);});
+  $("chordPiano").innerHTML=pianoHTML(new Set(pcs),chordRoot);
+  bindPiano($("chordPiano"),pc=>{initAudio();pianoNote(midiFreq(48+pc),actx.currentTime,0.6,0.7);});
+  const rows=ch.iv.map((iv,i)=>`<tr><td><b>${ch.roles[i]||"ext"}</b></td><td><b>${pcName(chordRoot+iv)}</b></td><td>${iv} semitones</td><td><button class="btn" data-pc="${(chordRoot+iv)%12}" type="button" style="padding:4px 10px">▶ Hear</button></td></tr>`).join("");
+  $("chordTable").innerHTML=`<table class="note-table"><thead><tr><th>Role</th><th>Note</th><th>Interval</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  $("chordTable").querySelectorAll("button[data-pc]").forEach(b=>b.addEventListener("click",()=>{initAudio();pianoNote(midiFreq(48+(+b.dataset.pc)),actx.currentTime,0.7,0.7);}));
+  const invName=["root position","1st inversion (3rd in bass)","2nd inversion (5th in bass)"][chordInv];
+  $("chordTheory").innerHTML=`<b>${pcName(chordRoot)}${ch.name}</b> (${invName}) — ${ch.desc}<br><b>Notes:</b> ${ch.iv.map(iv=>pcName(chordRoot+iv)).join(" · ")} · <b>Formula:</b> ${ch.iv.join(" + ")} semitones`;
+}
+function playChordArp(strum){
+  initAudio(); const {pcs}=chordNotes();
+  const notes=notesInWindow(pcs,0,12);
+  const t0=actx.currentTime+0.08;
+  if(strum){ notes.slice(0,6).forEach((n,i)=>pianoNote(midiFreq(n.m+12),t0+i*0.06,0.9,0.6)); }
+  else { notes.forEach((n,i)=>bassNote(stringFreq(n.s,n.f),t0+i*0.28,0.5,0.9)); }
+}
+
+/* ================= INTERVAL TRAINER ================= */
+let intRoot=0;
+function renderIntervals(){
+  const rows=INTERVALS.map(iv=>{
+    const pc=(intRoot+iv.s)%12;
+    return `<tr><td><b>${iv.n}</b></td><td>${iv.s} semitones</td><td><b>${pcName(pc)}</b></td><td><button class="btn" data-s="${iv.s}" type="button" style="padding:4px 10px">▶ Hear</button></td></tr>`;
+  }).join("");
+  $("intervalTable").innerHTML=`<table class="note-table"><thead><tr><th>Interval</th><th>Distance</th><th>From ${pcName(intRoot)}</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  $("intervalTable").querySelectorAll("button[data-s]").forEach(b=>b.addEventListener("click",()=>playInterval(+b.dataset.s,false)));
+  $("intervalTheory").innerHTML=`Base note <b>${pcName(intRoot)}</b>. Intervals are measured in semitones (half steps). <b>Perfect</b> intervals (4th, 5th, octave) sound stable; <b>major/minor</b> intervals come in bright/dark pairs. On one string, the fret distance <i>is</i> the semitone count.`;
+}
+function playInterval(semis,slow){
+  initAudio(); const t0=actx.currentTime+0.08; const gap=slow?1.1:0.55;
+  pianoNote(midiFreq(48+intRoot),t0,0.6,0.7);
+  pianoNote(midiFreq(48+intRoot+semis),t0+gap,0.8,0.7);
+}
+
+/* ================= EAR QUIZ ================= */
+let quiz={score:0,streak:0,best:0,round:0,answer:null,opts:[],lock:false};
+let quizDiff="easy";
+function quizPool(){
+  const mode=$("quizMode").value;
+  if(mode==="note") return NOTE_NAMES.map((n,i)=>({label:n,pc:i}));
+  if(mode==="interval") return INTERVALS.map(iv=>({label:iv.n,s:iv.s}));
+  return Object.keys(CHORDS).map(k=>({label:pcName(quiz._root||0)+CHORDS[k].name,root:quiz._root||0,key:k}));
+}
+function newQuiz(){
+  initAudio(); quiz.lock=false; quiz.round++;
+  const mode=$("quizMode").value;
+  let correct, opts=[];
+  if(mode==="note"){
+    const pc=Math.floor(Math.random()*12);
+    correct={label:pcName(pc),pc};
+    const pool=NOTE_NAMES.map((n,i)=>({label:n,pc:i})).filter(o=>o.pc!==pc);
+    opts=shuffle(pool).slice(0,3);
+  } else if(mode==="interval"){
+    const iv=INTERVALS[Math.floor(Math.random()*INTERVALS.length)];
+    correct={label:iv.n,s:iv.s};
+    const pool=INTERVALS.filter(o=>o.s!==iv.s);
+    opts=shuffle(pool).slice(0,3).map(o=>({label:o.n,s:o.s}));
+  } else {
+    const root=Math.floor(Math.random()*12); quiz._root=root;
+    const keys=Object.keys(CHORDS);
+    const key=keys[Math.floor(Math.random()*keys.length)];
+    correct={label:pcName(root)+CHORDS[key].name,root,key};
+    const pool=keys.filter(k=>k!==key);
+    opts=shuffle(pool).slice(0,3).map(k=>({label:pcName(root)+CHORDS[k].name,root,key:k}));
+  }
+  quiz.answer=correct; quiz.opts=shuffle([correct,...opts]);
+  $("quizOpts").innerHTML=quiz.opts.map((o,i)=>`<button type="button" data-i="${i}">${o.label}</button>`).join("");
+  $("quizOpts").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>answerQuiz(+b.dataset.i)));
+  $("quizFeedback").className="feedback"; $("quizFeedback").textContent="";
+  $("quizTheory").innerHTML="Listen, then choose. <b>Replay</b> plays it again — no penalty.";
+  playQuizPrompt();
+  updateQuizScore();
+}
+function playQuizPrompt(){
+  initAudio(); const mode=$("quizMode").value; const t0=actx.currentTime+0.08;
+  if(mode==="note"){ pianoNote(midiFreq(48+quiz.answer.pc),t0,0.9,0.8); }
+  else if(mode==="interval"){ pianoNote(midiFreq(48+0),t0,0.6,0.7); pianoNote(midiFreq(48+quiz.answer.s),t0+0.6,0.9,0.7); }
+  else { const ch=CHORDS[quiz.answer.key]; ch.iv.forEach(iv=>pianoNote(midiFreq(48+quiz.answer.root+iv),t0,1.2,0.5)); }
+}
+function answerQuiz(i){
+  if(quiz.lock) return; quiz.lock=true;
+  const picked=quiz.opts[i]; const ok=picked.label===quiz.answer.label;
+  document.querySelectorAll("#quizOpts button").forEach((b,j)=>{
+    if(quiz.opts[j].label===quiz.answer.label) b.classList.add("correct");
+    else if(j===i) b.classList.add("wrong");
+  });
+  const fb=$("quizFeedback");
+  if(ok){ quiz.score++; quiz.streak++; quiz.best=Math.max(quiz.best,quiz.streak); fb.className="feedback good"; fb.textContent=`✅ Correct — ${quiz.answer.label}. Streak ${quiz.streak}!`; }
+  else { quiz.streak=0; fb.className="feedback bad"; fb.textContent=`❌ It was ${quiz.answer.label}. Listen once more, then try the next one.`; }
+  updateQuizScore();
+}
+function updateQuizScore(){ $("quizScore").textContent=quiz.score; $("quizStreak").textContent=quiz.streak; $("quizBest").textContent=quiz.best; $("quizRound").textContent=quiz.round; }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+/* ================= FRETBOARD TRAINER ================= */
+let fret={score:0,streak:0,best:0,mode:"find",target:null,found:new Set(),lock:false};
+function newFretChallenge(){
+  initAudio(); fret.lock=false; fret.found=new Set();
+  fret.target=Math.floor(Math.random()*12);
+  $("fretFeedback").className="feedback"; $("fretFeedback").textContent="";
+  if(fret.mode==="find"){
+    $("fretAnswerField").style.display="none";
+    $("fretPrompt").innerHTML=`🎯 Find every <b>${pcName(fret.target)}</b> on the fretboard. Click all of them!`;
+    renderTrainerFretboard();
+  } else {
+    $("fretAnswerField").style.display="block";
+    $("fretPrompt").innerHTML=`🎯 What note is highlighted? Click the correct name.`;
+    renderTrainerFretboard(true);
+    pianoNote(midiFreq(48+fret.target),actx.currentTime+0.08,0.8,0.7);
+  }
+}
+function renderTrainerFretboard(highlightOne){
+  const hl=new Map();
+  if(highlightOne){
+    const cells=[];
+    for(let s=0;s<4;s++) for(let f=0;f<=24;f++) if(((stringMidi(s,f)%12)+12)%12===fret.target) cells.push(s+"-"+f);
+    const pick=cells[Math.floor(Math.random()*cells.length)];
+    fret._highlight=pick;
+    hl.set(pick,{cls:"root"});
+  }
+  $("trainerFretboard").innerHTML=fretboardHTML({highlight:hl,showNames:false});
+  bindFretboard($("trainerFretboard"),(s,f)=>{
+    initAudio(); bassNote(stringFreq(s,f),actx.currentTime,0.5,0.9);
+    if(fret.mode==="find"){
+      const pc=((stringMidi(s,f)%12)+12)%12; const k=s+"-"+f;
+      if(pc===fret.target&&!fret.found.has(k)){
+        fret.found.add(k);
+        const cell=document.querySelector(`#trainerFretboard .fb-cell[data-s="${s}"][data-f="${f}"]`);
+        if(cell){ cell.classList.add("root"); cell.innerHTML=`<span class="nl">${pcName(pc)}</span>`; }
+        const total=countTargetCells();
+        if(fret.found.size>=total){
+          fret.score++; fret.streak++; fret.best=Math.max(fret.best,fret.streak);
+          const fb=$("fretFeedback"); fb.className="feedback good"; fb.textContent=`✅ All ${total} ${pcName(fret.target)}s found! Press New challenge.`;
+          updateFretScore();
+        }
+      } else if(pc!==fret.target){
+        fret.streak=0; updateFretScore();
+        const fb=$("fretFeedback"); fb.className="feedback bad"; fb.textContent=`That's ${pcName(pc)} — keep looking for ${pcName(fret.target)}.`;
+      }
+    }
+  });
+}
+function countTargetCells(){ let c=0; for(let s=0;s<4;s++) for(let f=0;f<=24;f++) if(((stringMidi(s,f)%12)+12)%12===fret.target) c++; return c; }
+function updateFretScore(){ $("fretScore").textContent=fret.score; $("fretStreak").textContent=fret.streak; $("fretBest").textContent=fret.best; }
+
+/* ================= PROGRESSION PLAYER ================= */
+let progKey=0, progTempo=90, progPlaying=false, progTimer=null;
+const PROGS={
+  pop:{chords:["maj","maj","min","maj"],degrees:["I","V","vi","IV"],roots:[0,7,9,5]},
+  jazz:{chords:["m7","7","maj7"],degrees:["ii","V","I"],roots:[2,7,0]},
+  doowop:{chords:["maj","min","maj","7"],degrees:["I","vi","IV","V"],roots:[0,9,5,7]},
+  blues:{chords:["7","7","7","7","7","7","maj","7","min","7","maj","7"],degrees:["I","I","I","I","IV","IV","I","I","V","IV","I","V"],roots:[0,0,0,0,5,5,0,0,7,5,0,7]},
+  andalusian:{chords:["min","maj","maj","7"],degrees:["i","♭VII","♭VI","V"],roots:[0,10,8,7]},
+  minor:{chords:["min","min","7","min"],degrees:["i","iv","V","i"],roots:[0,5,7,0]}
+};
+function renderProg(){
+  const p=PROGS[$("progType").value];
+  $("progChords").innerHTML=p.chords.map((ck,i)=>{
+    const root=(progKey+p.roots[i])%12;
+    return `<span class="chip" style="font-size:14px;padding:8px 14px"><b>${p.degrees[i]}</b> · ${pcName(root)}${CHORDS[ck].name}</span>`;
+  }).join("");
+  const pcs=new Set(); p.chords.forEach((ck,i)=>CHORDS[ck].iv.forEach(iv=>pcs.add((progKey+p.roots[i]+iv)%12)));
+  const hl=new Map();
+  for(let s=0;s<4;s++) for(let f=0;f<=24;f++){
+    const pc=((stringMidi(s,f)%12)+12)%12;
+    if(pcs.has(pc)) hl.set(s+"-"+f,{cls:pc===progKey?"root":"tone"});
+  }
+  $("progFretboard").innerHTML=fretboardHTML({highlight:hl,showNames:true});
+  bindFretboard($("progFretboard"),(s,f)=>{initAudio();bassNote(stringFreq(s,f),actx.currentTime,0.6,0.9);});
+  $("progTheory").innerHTML=`Key of <b>${pcName(progKey)}</b>. Roman numerals show each chord's job in the key: <b>I</b> = home, <b>V</b> = tension pulling home, <b>vi/IV</b> = colour and movement. Play it on loop and practise finding the roots by ear.`;
+}
+function playProg(){
+  initAudio(); stopProg(); progPlaying=true;
+  const p=PROGS[$("progType").value]; const spb=60/progTempo; const t0=actx.currentTime+0.08;
+  let bar=0;
+  const playBar=()=>{
+    if(!progPlaying) return;
+    const ck=p.chords[bar%p.chords.length]; const root=(progKey+p.roots[bar%p.roots.length])%12;
+    const barStart=t0+bar*4*spb;
+    const rootNotes=notesInWindow([root],0,12).filter(n=>n.m<40);
+    const rn=rootNotes[0];
+    if(rn){ bassNote(stringFreq(rn.s,rn.f),barStart,spb*0.9,0.9); bassNote(stringFreq(rn.s,rn.f),barStart+2*spb,spb*0.9,0.9); }
+    const fifthNotes=notesInWindow([(root+7)%12],0,12).filter(n=>n.m<44);
+    if(fifthNotes[0]){ bassNote(stringFreq(fifthNotes[0].s,fifthNotes[0].f),barStart+spb,spb*0.9,0.8); bassNote(stringFreq(fifthNotes[0].s,fifthNotes[0].f),barStart+3*spb,spb*0.9,0.8); }
+    CHORDS[ck].iv.forEach(iv=>pianoNote(midiFreq(48+root+iv),barStart,spb*3.6,0.4));
+    bar++;
+    progTimer=setTimeout(playBar,4*spb*1000);
+  };
+  playBar();
+}
+function stopProg(){ progPlaying=false; clearTimeout(progTimer); }
+
+/* ================= LEVELS & CURRICULUM ================= */
+let currentLevel=localStorage.getItem("kk-level")||"beginner";
+const LEVELS={
+  beginner:{title:"🌱 Beginner path",sub:"Notes, first scales & chords, rhythm — your foundation.",
+    modules:[
+      {t:"Notes & the fretboard",d:"Bass has 4 strings tuned E–A–D–G. There are only 12 notes (C, C#, D… B) and every fret moves up one semitone. Learn the natural notes A–G first, then sharps and flats.",f:"<b>Key facts:</b> 12 notes repeat every octave · 1 fret = 1 semitone · open strings E A D G",a:{label:"🎸 Open Fretboard Trainer",tool:"fret"}},
+      {t:"Major scale",d:"The major scale is the reference pattern for all Western music: whole–whole–half–whole–whole–whole–half. Play C major in one position, naming each note out loud.",f:"<b>C major:</b> C D E F G A B · <b>Pattern:</b> W-W-H-W-W-W-H",a:{label:"🎼 Open Scale Explorer",tool:"scale"},ex:1},
+      {t:"Natural minor scale",d:"The natural minor is the relative minor of the major scale — same notes, different home. A minor uses C major's notes but feels sad because it starts on A.",f:"<b>A minor:</b> A B C D E F G · <b>Pattern:</b> W-H-W-W-H-W-W",a:{label:"🎼 Open Scale Explorer",tool:"scale"},ex:2},
+      {t:"Major & minor triads",d:"Chords stack thirds: root–3rd–5th. The 3rd decides the mood — major 3rd (4 semitones) is bright, minor 3rd (3 semitones) is dark. Arpeggiate them up and down.",f:"<b>Major:</b> 1–3–5 (0+4+7) · <b>Minor:</b> 1–♭3–5 (0+3+7)",a:{label:"🎹 Open Chord Builder",tool:"chord"},ex:3},
+      {t:"Perfect intervals",d:"Bassists live on perfect intervals: 4th (5 frets), 5th (7 frets), octave (12 frets). On one string, the fret distance is the semitone count — the easiest intervals to learn by ear.",f:"<b>Perfect 4th:</b> 5 semitones · <b>Perfect 5th:</b> 7 · <b>Octave:</b> 12",a:{label:"📏 Open Interval Trainer",tool:"interval"}},
+      {t:"Rhythm & the metronome",d:"Most songs are in 4/4: four quarter-note beats per bar (1-2-3-4). Always practise with the metronome — turn it on in the player and count in before you play.",f:"<b>4/4:</b> 4 beats per bar · <b>Quarter note:</b> 1 beat · <b>Eighth note:</b> ½ beat",a:{label:"▶ Go to the tab player",scroll:"player"}},
+      {t:"First progression: I–V–vi–IV",d:"The most-used progression in pop music. In C: C–G–Am–F. Each bar, play root–5th–octave–5th. Loop it until you can feel the cycle.",f:"<b>In C:</b> C (I) · G (V) · Am (vi) · F (IV)",a:{label:"🔁 Open Progression Player",tool:"prog"},ex:5}
+    ]},
+  intermediate:{title:"🎸 Intermediate path",sub:"Modes, 7th chords, ii–V–I and ear training — sound musical in any key.",
+    modules:[
+      {t:"Modes: same notes, different home",d:"A mode is the same scale starting on a different degree. Dorian (minor with raised 6th) sounds jazzy; Mixolydian (major with ♭7) sounds bluesy. The scale doesn't change — your starting point does.",f:"<b>Dorian:</b> 1-2-♭3-4-5-6-♭7 · <b>Mixolydian:</b> 1-2-3-4-5-6-♭7",a:{label:"🎼 Open Scale Explorer",tool:"scale"}},
+      {t:"Pentatonic & blues scales",d:"Five notes, almost no wrong notes. Minor pentatonic is the blues skeleton; adding the ♯4 'blue note' makes the full blues scale. Solo over any minor blues with confidence.",f:"<b>Minor pent:</b> 1-♭3-4-5-♭7 · <b>Blues:</b> + ♯4",a:{label:"🎼 Open Scale Explorer",tool:"scale"}},
+      {t:"7th chords",d:"Add a 7th to a triad for colour: maj7 is dreamy, minor 7 is warm and jazzy, dominant 7 is bluesy and pulls to the tonic. These three chords cover 90% of jazz and funk.",f:"<b>maj7:</b> 0+4+7+11 · <b>m7:</b> 0+3+7+10 · <b>7:</b> 0+4+7+10",a:{label:"🎹 Open Chord Builder",tool:"chord"}},
+      {t:"Inversions: 3rd & 5th in the bass",d:"An inversion moves a chord tone to the bottom. The bass note changes the chord's feel: root position is stable, 1st inversion (3rd in bass) flows, 2nd inversion (5th in bass) floats. Bassists choose the bass note — that's your power.",f:"<b>Root:</b> 1 in bass · <b>1st inv:</b> 3 in bass · <b>2nd inv:</b> 5 in bass",a:{label:"🎹 Open Chord Builder",tool:"chord"}},
+      {t:"ii–V–I: the jazz engine",d:"In C: Dm7–G7–Cmaj7. The ii (minor 7) sets up the V (dominant 7), which pulls home to I. Almost every jazz standard is built from ii–V–I chains — Autumn Leaves is three of them in a row.",f:"<b>In C:</b> Dm7 (ii) → G7 (V) → Cmaj7 (I)",a:{label:"🔁 Open Progression Player",tool:"prog"}},
+      {t:"Ear training",d:"Sing every interval before you answer — ears learn faster when the voice joins in. Start with notes, then intervals, then chords. Track your streak.",f:"<b>Tip:</b> sing the interval, then check · <b>Start:</b> Easy / Identify the note",a:{label:"👂 Open Ear Quiz",tool:"quiz"}},
+      {t:"Finger independence",d:"Chromatic 1-2-3-4 across all strings trains even tone and independent fingers. Keep fingers close to the fretboard, anchor the thumb, let the metronome be the boss.",f:"<b>Pattern:</b> 1-2-3-4 on every string, up and down",a:{label:"▶ Load the exercise",ex:4},link:{href:"practice2.html",label:"Full drill: practice2.html →"}}
+    ]},
+  master:{title:"🎓 Master path",sub:"Altered dominants, extensions, walking bass and full jazz standards with piano.",
+    modules:[
+      {t:"Melodic minor & altered dominants",d:"Jazz melodic minor raises the 6th and 7th: 1-2-♭3-4-5-6-7. A dominant 7 built on it (7alt) gets ♭9, ♯9, ♭13 and ♯11 — the 'outside' sound. F7alt comes from C melodic minor.",f:"<b>C melodic minor:</b> C D E♭ F G A B · <b>F7alt:</b> F A♭ B♭ D♭ E♭",a:{label:"▶ Load F7alt exercise",ex:0},link:{href:"practice.html",label:"Full drill: practice.html →"}},
+      {t:"Extensions: 9, 11, 13",d:"Extensions are chord tones above the octave: 9th = 2nd up an octave, 11th = 4th, 13th = 6th. Dominant 9/11/13 are the big-band jazz chords. Add them one at a time and listen for the colour.",f:"<b>9:</b> +14 · <b>11:</b> +17 · <b>13:</b> +21 semitones",a:{label:"🎹 Open Chord Builder",tool:"chord"}},
+      {t:"Diminished & augmented",d:"Diminished (0+3+6) is tense and wants to resolve; augmented (0+4+8) divides the octave into three major 3rds and sounds dreamy. Diminished 7 is symmetrical — any note can be the root.",f:"<b>dim:</b> 0+3+6 · <b>aug:</b> 0+4+8 · <b>dim7:</b> 0+3+6+9",a:{label:"🎹 Open Chord Builder",tool:"chord"}},
+      {t:"Walking bass",d:"The jazz bass line: one quarter note per beat, root → 3rd → 5th → approach note (chromatic or scale step into the next root). That single pattern carries almost every standard. Learn it in the play-along below.",f:"<b>Rule:</b> root – 3rd – 5th – approach · <b>Approach:</b> next root −1 (chromatic)",a:{label:"🎷 Open Jazz Play-along",tool:"jazz"}},
+      {t:"Jazz standards with piano",d:"Autumn Leaves (ii–V–I chains), Blue Bossa (minor blues) and All Blues (12-bar). The sampled piano comps chords and plays the melody; the tab is your walking line. Slow to 0.5×, loop a bar, play underneath.",f:"<b>Autumn Leaves:</b> Dm7 G7 Cmaj7… · <b>Blue Bossa:</b> Cm7 Dm7♭5 G7… · <b>All Blues:</b> E♭ 12-bar",a:{label:"🎷 Open Jazz Play-along",tool:"jazz"},ex:6},
+      {t:"Substitutions & reharmonization",d:"A tritone substitution replaces a dominant with another dominant a tritone away (G7 → D♭7 in C). It keeps the pull to I but changes the bass movement. Try it over ii–V–I: Dm7–D♭7–Cmaj7.",f:"<b>Tritone sub:</b> V → ♭II7 · <b>Example:</b> G7 → D♭7 → C",a:{label:"🔁 Open Progression Player",tool:"prog"}}
+    ]}
+};
+function renderCurriculum(){
+  const lv=LEVELS[currentLevel];
+  $("curriculumTitle").textContent="📚 "+lv.title;
+  $("curriculumSub").textContent=lv.sub;
+  document.querySelectorAll(".level-card").forEach(c=>c.classList.toggle("on",c.dataset.level===currentLevel));
+  $("curriculum").innerHTML=lv.modules.map((m,i)=>{
+    const btn=m.a?`<button class="btn primary" data-mod="${i}" type="button">${m.a.label}</button>`:"";
+    const link=m.link?`<a class="btn" href="${m.link.href}">${m.link.label}</a>`:"";
+    return `<div class="module"><div class="num">${i+1}</div><h3>${m.t}</h3><p>${m.d}</p><div class="facts">${m.f}</div><div class="btn-row">${btn}${link}</div></div>`;
+  }).join("");
+  $("curriculum").querySelectorAll("button[data-mod]").forEach(b=>b.addEventListener("click",()=>{
+    const m=LEVELS[currentLevel].modules[+b.dataset.mod];
+    if(m.a&&m.a.tool){ switchTool(m.a.tool); document.getElementById("tool-"+m.a.tool).scrollIntoView({behavior:"smooth",block:"start"}); }
+    if(m.a&&m.a.scroll){ document.querySelector(".layout").scrollIntoView({behavior:"smooth"}); }
+    if(typeof m.ex==="number"){ stopPlayback(); loadExercise(m.ex); document.querySelector(".layout").scrollIntoView({behavior:"smooth"}); }
+  }));
+}
+function setLevel(lv){
+  currentLevel=lv; localStorage.setItem("kk-level",lv);
+  exFilter=lv==="beginner"?"Beginner":lv==="intermediate"?"Intermediate":"Master";
+  document.querySelectorAll("#exFilter button").forEach(b=>b.classList.toggle("on",b.dataset.f===exFilter));
+  renderCurriculum(); renderExerciseList();
+  toast("Level: "+LEVELS[lv].title);
+}
+
+/* ================= JAZZ TOOL ================= */
+function renderJazz(){
+  const sel=$("jazzSong");
+  sel.innerHTML=JAZZ_SONGS.map((s,i)=>`<option value="${i}">${s.title} — ${s.key}</option>`).join("");
+  const song=JAZZ_SONGS[+sel.value||0];
+  $("jazzTheory").innerHTML=song.theory;
+  $("jazzChart").innerHTML=walkingBass(song.chords).chart.map((c,i)=>`<span class="chord-chip">${c.symbol}<small>bar ${i+1}</small></span>`).join("");
+  const w=walkingBass(song.chords);
+  const hl=new Map();
+  w.bass.forEach(n=>hl.set(n.s+"-"+n.f,{cls:"tone"}));
+  $("jazzFretboard").innerHTML=fretboardHTML({highlight:hl,showNames:true});
+  bindFretboard($("jazzFretboard"),(s,f)=>{initAudio();bassNote(stringFreq(s,f),actx.currentTime,0.6,0.9);});
+}
+function playJazz(){
+  const idx=+($("jazzSong").value||0);
+  const exIdx=EXERCISES.findIndex(e=>e.id===JAZZ_SONGS[idx].id);
+  if(exIdx>=0){ stopPlayback(); loadExercise(exIdx); startPlayback(); document.querySelector(".layout").scrollIntoView({behavior:"smooth"}); }
+}
+
+/* ================= TOOL TABS ================= */
+function switchTool(name){
+  document.querySelectorAll("#toolTabs button").forEach(b=>b.classList.toggle("on",b.dataset.tool===name));
+  document.querySelectorAll(".tool-panel").forEach(p=>p.classList.toggle("on",p.id==="tool-"+name));
+}
+window.switchTool=switchTool;
+
+/* ================= INIT & BINDINGS ================= */
+function init(){
+  /* selects */
+  $("scaleType").innerHTML=Object.keys(SCALES).map(k=>`<option value="${k}">${SCALES[k].name}</option>`).join("");
+  $("chordType").innerHTML=Object.keys(CHORDS).map(k=>`<option value="${k}">${CHORDS[k].name}</option>`).join("");
+  noteButtons("scaleRoots",scaleRoot,pc=>{scaleRoot=pc;renderScale();});
+  noteButtons("chordRoots",chordRoot,pc=>{chordRoot=pc;renderChord();});
+  noteButtons("intRoots",intRoot,pc=>{intRoot=pc;renderIntervals();});
+  noteButtons("progKeys",progKey,pc=>{progKey=pc;renderProg();});
+  $("fretAnswers").innerHTML=NOTE_NAMES.map((n,i)=>`<button type="button" data-pc="${i}">${n}</button>`).join("");
+  $("fretAnswers").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+    if(fret.lock) return; fret.lock=true;
+    const ok=+b.dataset.pc===fret.target;
+    if(ok){ fret.score++; fret.streak++; fret.best=Math.max(fret.best,fret.streak); const fb=$("fretFeedback"); fb.className="feedback good"; fb.textContent=`✅ Correct — ${pcName(fret.target)}!`; }
+    else { fret.streak=0; const fb=$("fretFeedback"); fb.className="feedback bad"; fb.textContent=`❌ That was ${pcName(fret.target)}. Press New challenge.`; }
+    updateFretScore();
+  }));
+
+  /* player */
+  document.querySelectorAll("#exFilter button").forEach(b=>b.addEventListener("click",()=>{
+    exFilter=b.dataset.f;
+    document.querySelectorAll("#exFilter button").forEach(x=>x.classList.toggle("on",x===b));
+    renderExerciseList();
+  }));
+  document.querySelectorAll(".level-card").forEach(c=>c.addEventListener("click",()=>setLevel(c.dataset.level)));
+  renderExerciseList(); loadExercise(0); updateProgressLoop();
+  setLevel(currentLevel);
+  $("playBtn").addEventListener("click",togglePlay);
+  $("stopBtn").addEventListener("click",stopPlayback);
+  $("rewBtn").addEventListener("click",()=>{ if(isPlaying) restartFrom(0); else { seekBeat=0; updateProgress(0); } });
+  $("backBtn").addEventListener("click",()=>{ const b=Math.max(0,Math.floor(seekBeat/BEATS_PER_BAR)*BEATS_PER_BAR-BEATS_PER_BAR); if(isPlaying) restartFrom(b); else { seekBeat=b; updateProgress(b); } });
+  $("fwdBtn").addEventListener("click",()=>{ const b=Math.min(exData.totalBeats,(Math.floor(seekBeat/BEATS_PER_BAR)+1)*BEATS_PER_BAR); if(isPlaying) restartFrom(b); else { seekBeat=b; updateProgress(b); } });
+  $("loopBtn").addEventListener("click",()=>{ loopOn=!loopOn; $("loopBtn").classList.toggle("on",loopOn); toast(loopOn?"Loop on":"Loop off"); });
+  $("metroBtn").addEventListener("click",()=>{ metroOn=!metroOn; $("metroBtn").classList.toggle("on",metroOn); });
+  $("countBtn").addEventListener("click",()=>{ countIn=!countIn; $("countBtn").classList.toggle("on",countIn); });
+  $("trackGuide").addEventListener("click",()=>{ guideOn=!guideOn; $("trackGuide").classList.toggle("on",guideOn); });
+  $("tempoDown").addEventListener("click",()=>setTempo(tempo-5));
+  $("tempoUp").addEventListener("click",()=>setTempo(tempo+5));
+  $("speedDown").addEventListener("click",()=>setSpeed(speed-0.25));
+  $("speedUp").addEventListener("click",()=>setSpeed(speed+0.25));
+  $("volRange").addEventListener("input",e=>{ if(master) master.gain.value=e.target.value/100; });
+  $("bassVol").addEventListener("input",e=>{ if(bassGainNode) bassGainNode.gain.value=e.target.value/100; });
+  $("guideVol").addEventListener("input",e=>{ if(guideGainNode) guideGainNode.gain.value=e.target.value/100; });
+  $("metroVol").addEventListener("input",e=>{ if(metroGainNode) metroGainNode.gain.value=e.target.value/100; });
+  $("zoomRange").addEventListener("input",e=>{ pxPerBeat=+e.target.value; renderTab(); updateProgress(seekBeat); });
+  $("tuningSel").addEventListener("change",e=>{ tuningKey=e.target.value; stopPlayback(); loadExercise(exIndex); renderScale(); renderChord(); renderIntervals(); renderProg(); toast("Tuning: "+tuning().label); });
+  $("progressTrack").addEventListener("click",e=>{
+    const r=e.currentTarget.getBoundingClientRect();
+    const b=Math.min(exData.totalBeats,Math.max(0,(e.clientX-r.left)/r.width*exData.totalBeats));
+    if(isPlaying) restartFrom(b); else { seekBeat=b; updateProgress(b); }
+  });
+  document.querySelectorAll("#viewSeg button").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll("#viewSeg button").forEach(x=>x.classList.toggle("on",x===b));
+    document.querySelectorAll(".view-pane").forEach(p=>p.classList.toggle("on",p.id==="pane-"+b.dataset.view));
+  }));
+  $("favBtn").addEventListener("click",()=>{
+    const favs=JSON.parse(localStorage.getItem("kk-favs")||"[]");
+    const id=EXERCISES[exIndex].id;
+    if(favs.includes(id)){ localStorage.setItem("kk-favs",JSON.stringify(favs.filter(x=>x!==id))); $("favBtn").textContent="♡ Favourite"; toast("Removed from favourites"); }
+    else { favs.push(id); localStorage.setItem("kk-favs",JSON.stringify(favs)); $("favBtn").textContent="♥ Favourited"; toast("Added to favourites ♥"); }
+  });
+  $("shareBtn").addEventListener("click",async()=>{
+    try{ await navigator.clipboard.writeText(location.href); toast("Link copied to clipboard"); }
+    catch(e){ toast("Copy this URL: "+location.href); }
+  });
+  $("printBtn").addEventListener("click",()=>window.print());
+  document.addEventListener("keydown",e=>{
+    if(e.target.matches("input,select,textarea")) return;
+    if(e.code==="Space"){ e.preventDefault(); togglePlay(); }
+    else if(e.key==="s"||e.key==="S") stopPlayback();
+    else if(e.key==="l"||e.key==="L") $("loopBtn").click();
+    else if(e.key==="m"||e.key==="M") $("metroBtn").click();
+    else if(e.key==="ArrowUp"){ e.preventDefault(); setTempo(tempo+5); }
+    else if(e.key==="ArrowDown"){ e.preventDefault(); setTempo(tempo-5); }
+    else if(e.key==="ArrowLeft") $("backBtn").click();
+    else if(e.key==="ArrowRight") $("fwdBtn").click();
+  });
+
+  /* tools */
+  document.querySelectorAll("#toolTabs button").forEach(b=>b.addEventListener("click",()=>switchTool(b.dataset.tool)));
+  $("scaleType").addEventListener("change",e=>{scaleKey=e.target.value;renderScale();});
+  document.querySelectorAll("#scaleDir .chip").forEach(c=>c.addEventListener("click",()=>{ document.querySelectorAll("#scaleDir .chip").forEach(x=>x.classList.remove("on")); c.classList.add("on"); scaleDir=c.dataset.dir; }));
+  $("scaleTempoDown").addEventListener("click",()=>{scaleTempo=Math.max(30,scaleTempo-5);$("scaleTempoVal").textContent=scaleTempo;});
+  $("scaleTempoUp").addEventListener("click",()=>{scaleTempo=Math.min(200,scaleTempo+5);$("scaleTempoVal").textContent=scaleTempo;});
+  $("scalePlay").addEventListener("click",playScale);
+  $("scaleStop").addEventListener("click",stopScale);
+  $("chordType").addEventListener("change",e=>{chordKey=e.target.value;renderChord();});
+  document.querySelectorAll("#chordInv .chip").forEach(c=>c.addEventListener("click",()=>{ document.querySelectorAll("#chordInv .chip").forEach(x=>x.classList.remove("on")); c.classList.add("on"); chordInv=+c.dataset.inv; renderChord(); }));
+  $("chordPlay").addEventListener("click",()=>playChordArp(false));
+  $("chordStrum").addEventListener("click",()=>playChordArp(true));
+  $("intPlay").addEventListener("click",()=>playInterval(7,false));
+  $("intPlaySlow").addEventListener("click",()=>playInterval(7,true));
+  $("quizNew").addEventListener("click",newQuiz);
+  $("quizReplay").addEventListener("click",()=>{ if(quiz.answer) playQuizPrompt(); });
+  document.querySelectorAll("#quizDiff .chip").forEach(c=>c.addEventListener("click",()=>{ document.querySelectorAll("#quizDiff .chip").forEach(x=>x.classList.remove("on")); c.classList.add("on"); quizDiff=c.dataset.d; }));
+  $("fretNew").addEventListener("click",newFretChallenge);
+  document.querySelectorAll("#fretMode .chip").forEach(c=>c.addEventListener("click",()=>{ document.querySelectorAll("#fretMode .chip").forEach(x=>x.classList.remove("on")); c.classList.add("on"); fret.mode=c.dataset.m; }));
+  $("progType").addEventListener("change",renderProg);
+  $("progTempoDown").addEventListener("click",()=>{progTempo=Math.max(40,progTempo-5);$("progTempoVal").textContent=progTempo;});
+  $("progTempoUp").addEventListener("click",()=>{progTempo=Math.min(200,progTempo+5);$("progTempoVal").textContent=progTempo;});
+  $("progPlay").addEventListener("click",playProg);
+  $("progStop").addEventListener("click",stopProg);
+  $("jazzSong").addEventListener("change",renderJazz);
+  document.querySelectorAll("#jazzTracks .chip").forEach(c=>c.addEventListener("click",()=>{
+    const t=c.dataset.t; jazzTracks[t]=!jazzTracks[t]; c.classList.toggle("on",jazzTracks[t]);
+  }));
+  $("jazzPlay").addEventListener("click",playJazz);
+  $("jazzStop").addEventListener("click",stopPlayback);
+
+  renderScale(); renderChord(); renderIntervals(); renderProg(); renderJazz();
+  $("trainerFretboard").innerHTML=fretboardHTML({highlight:new Map(),showNames:false});
+  bindFretboard($("trainerFretboard"),(s,f)=>{initAudio();bassNote(stringFreq(s,f),actx.currentTime,0.5,0.9);});
+}
+function setTempo(v){ tempo=Math.min(220,Math.max(30,v)); $("tempoVal").textContent=tempo; if(isPlaying){ const b=currentBeat(); restartFrom(b); } updateProgress(seekBeat); }
+function setSpeed(v){ speed=Math.min(2,Math.max(0.25,Math.round(v*100)/100)); $("speedVal").textContent=speed.toFixed(2).replace(/0$/,"")+"×"; if(isPlaying){ const b=currentBeat(); restartFrom(b); } }
+document.addEventListener("DOMContentLoaded",init);
+</script>
 </body>
 </html>
